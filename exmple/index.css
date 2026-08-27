@@ -1,0 +1,181 @@
+:root {
+  color-scheme: dark;
+  --page-padding-x: 16px;
+  --bg: #0a0a0b;
+  --surface: #111113;
+  --surface-elevated: #18181b;
+  --text: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --accent: #6366f1;
+  --accent-contrast: #ffffff;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.28);
+  --role-admin-bg: rgba(239, 68, 68, 0.12);
+  --role-admin-color: #f87171;
+  --role-supervisor-bg: rgba(245, 158, 11, 0.12);
+  --role-supervisor-color: #fbbf24;
+  --role-user-bg: rgba(99, 102, 241, 0.12);
+  --role-user-color: #818cf8;
+  --success: #22c55e;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  --bottom-nav-height: 66px;
+  --bottom-nav-clearance: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+  --overlay-bottom-inset: calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f8f8fa;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --text: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+  --accent: #4f46e5;
+  --accent-contrast: #ffffff;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 12px 40px rgba(15, 23, 42, 0.08);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  height: 100%;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  min-height: 100dvh;
+  font-family:
+    'IRANYekanX',
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  /* IRANYekanX: render Latin digits 0-9 with Persian glyphs (no Unicode conversion). */
+  -moz-font-feature-settings: 'ss02';
+  -webkit-font-feature-settings: 'ss02';
+  font-feature-settings: 'ss02';
+}
+
+button,
+a,
+[role='button'],
+input,
+select,
+textarea,
+label,
+summary {
+  -webkit-tap-highlight-color: transparent;
+  font-feature-settings: inherit;
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+[role='button']:focus:not(:focus-visible) {
+  outline: none;
+}
+
+#root {
+  height: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+@font-face {
+  font-family: 'IRANYekanX';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('/fonts/IRANYekanX-Light.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'IRANYekanX';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/IRANYekanX-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'IRANYekanX';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/IRANYekanX-Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'IRANYekanX';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/IRANYekanX-DemiBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'IRANYekanX';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/IRANYekanX-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'IRANYekanX';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/IRANYekanX-ExtraBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'IRANYekanX';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('/fonts/IRANYekanX-Black.ttf') format('truetype');
+}

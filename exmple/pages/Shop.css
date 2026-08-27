@@ -1,0 +1,229 @@
+.shop {
+  display: flex;
+  flex-direction: column;
+}
+
+.shop__search {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 12px;
+}
+
+.shop__search-row {
+  display: flex;
+  flex-direction: row;
+  direction: ltr;
+  align-items: stretch;
+  gap: 8px;
+  height: 38px;
+}
+
+.shop__search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.shop__search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.shop__search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.shop__search-btn {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shop__search-btn:active {
+  transform: scale(0.95);
+  opacity: 0.92;
+}
+
+.shop__search-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  z-index: 3;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.shop__search-empty {
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.shop__search-list {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.shop__search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: right;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shop__search-list li:last-child .shop__search-item {
+  border-bottom: none;
+}
+
+.shop__search-item:hover:not(:disabled) {
+  background: var(--surface-elevated);
+}
+
+.shop__search-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shop__search-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.shop__search-item-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.shop__categories {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 12px;
+}
+
+.shop__categories-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.shop__categories-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.shop__category {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shop__category:active:not(:disabled) .shop__category-icon-wrap {
+  transform: scale(0.95);
+}
+
+.shop__category--disabled {
+  cursor: not-allowed;
+}
+
+.shop__category-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: transform 0.15s ease;
+}
+
+.shop__category--disabled .shop__category-icon-wrap {
+  opacity: 0.5;
+}
+
+.shop__category-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  padding: 2px 6px;
+  border-radius: 0 8px 0 6px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 8px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.shop__category-label {
+  max-width: 100%;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--text);
+}
+
+.shop__category--disabled .shop__category-label {
+  color: var(--text-muted);
+}

@@ -1,0 +1,206 @@
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+}
+
+.app-header__nav {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px 16px;
+}
+
+.app-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.app-header__user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.app-header__user-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.app-header__greeting {
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--text-muted);
+}
+
+.app-header__username {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.app-header__box {
+  flex-shrink: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.app-header__avatar-btn {
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-header__avatar-btn:hover {
+  background: var(--surface-elevated);
+}
+
+.app-header__avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-header__login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.app-header__login-btn:hover {
+  opacity: 0.92;
+}
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-header__wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-header__wallet:hover {
+  background: var(--surface-elevated);
+  color: var(--text);
+}
+
+.app-header__wallet--empty {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.app-header__wallet--empty:hover {
+  opacity: 0.92;
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.app-header__wallet-text {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.app-header__wallet-balance {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.app-header__wallet-amount {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.app-header__wallet-unit {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.app-header__wallet-loading {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--surface-elevated);
+  animation: header-pulse 1.2s ease-in-out infinite;
+}
+
+.app-header__user--skeleton {
+  animation: header-pulse 1.2s ease-in-out infinite;
+}
+
+.app-header__box--skeleton {
+  background: var(--surface-elevated);
+  border-color: transparent;
+}
+
+.app-header__wallet-skeleton {
+  width: 72px;
+}
+
+.app-header__skeleton-line {
+  display: block;
+  height: 10px;
+  border-radius: 4px;
+  background: var(--surface-elevated);
+}
+
+.app-header__skeleton-line--sm {
+  width: 64px;
+  height: 8px;
+}
+
+.app-header__skeleton-line--md {
+  width: 80px;
+  height: 12px;
+}
+
+@keyframes header-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+}

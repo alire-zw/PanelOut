@@ -1,0 +1,5 @@
+.wallet-payment-result--chatgpt {
+  --accent: #10a37f;
+  --accent-contrast: #ffffff;
+  accent-color: #10a37f;
+}

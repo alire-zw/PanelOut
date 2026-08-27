@@ -1,0 +1,35 @@
+.browser-login {
+  --accent: var(--hub-teal, #0d9488);
+  --accent-contrast: #ffffff;
+  --kyc-accent-soft: color-mix(in srgb, var(--hub-teal, #0d9488) 55%, #fff);
+  --kyc-accent-deep: var(--hub-teal, #0d9488);
+  --kyc-accent-text: var(--hub-teal, #0d9488);
+}
+
+.browser-login__submit,
+.browser-login__resend {
+  margin-top: 10px;
+  min-width: 180px;
+  height: 42px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--kyc-accent-soft) 0%, var(--kyc-accent-deep) 100%);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.browser-login__submit:disabled,
+.browser-login__resend:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.browser-login__resend {
+  background: color-mix(in srgb, var(--hub-teal, #0d9488) 14%, var(--surface));
+  color: var(--hub-teal, #0d9488);
+}

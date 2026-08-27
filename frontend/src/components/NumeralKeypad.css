@@ -1,0 +1,40 @@
+.numeral-keypad {
+  width: 100%;
+}
+
+.numeral-keypad__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.numeral-keypad__key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.numeral-keypad__key:active {
+  transform: scale(0.97);
+  background: var(--surface-elevated);
+}
+
+.numeral-keypad__key--action {
+  color: var(--text-secondary);
+}
+
+.numeral-keypad__spacer {
+  display: block;
+  min-height: 48px;
+}

@@ -1,0 +1,646 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  admin
+  supervisor
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  verified
+}
+
+enum CryptoPaymentStatus {
+  pending
+  completed
+  expired
+  swept
+}
+
+enum OrderStatus {
+  pending
+  processing
+  completed
+  failed
+  cancelled
+}
+
+enum OrderPaymentMethod {
+  wallet
+  zibal
+  tron
+}
+
+enum AccountShopOrderStatus {
+  registered
+  processing
+  delivered
+}
+
+model User {
+  id              Int              @id @default(autoincrement())
+  telegramId      BigInt           @unique @map("telegram_id")
+  username        String?          @db.VarChar(64)
+  firstName       String?          @map("first_name") @db.VarChar(128)
+  lastName        String?          @map("last_name") @db.VarChar(128)
+  realName        String?          @map("real_name") @db.VarChar(128)
+  phoneNumber       String?          @map("phone_number") @db.VarChar(20)
+  phoneVerifiedAt   DateTime?        @map("phone_verified_at")
+  nationalId        String?          @unique @map("national_id") @db.VarChar(10)
+  birthDate         DateTime?        @map("birth_date") @db.Date
+  termsAcceptedAt   DateTime?        @map("terms_accepted_at")
+  shahkarMatchedAt  DateTime?        @map("shahkar_matched_at")
+  kycVerifiedAt     DateTime?        @map("kyc_verified_at")
+  email             String?          @unique @db.VarChar(255)
+  balance           BigInt           @default(0)
+  clubPoints        Int              @default(0) @map("club_points")
+  role              UserRole         @default(user)
+  isPremium         Boolean          @default(false) @map("is_premium")
+  isBanned          Boolean          @default(false) @map("is_banned")
+  isActive          Boolean          @default(true) @map("is_active")
+  languageCode      String?          @map("language_code") @db.VarChar(16)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  payments          Payment[]
+  tronWallet        TronWallet?
+  cryptoPayments    CryptoPayment[]
+  sentTransfers     Transfer[] @relation("SentTransfers")
+  receivedTransfers Transfer[] @relation("ReceivedTransfers")
+  orders            Order[]
+  bankCards         BankCard[]
+  autoReactionChannels AutoReactionChannel[]
+  autoChannelViewChannels AutoChannelViewChannel[]
+  supportTickets       SupportTicket[]
+  clubRedemptions      ClubRewardRedemption[]
+
+  @@map("users")
+}
+
+model BankCard {
+  id         Int       @id @default(autoincrement())
+  userId     Int       @map("user_id")
+  cardNumber String    @map("card_number") @db.VarChar(16)
+  bankName   String?   @map("bank_name") @db.VarChar(128)
+  bankSlug   String?   @map("bank_slug") @db.VarChar(64)
+  bankBin    String?   @map("bank_bin") @db.VarChar(8)
+  isPrimary  Boolean   @default(true) @map("is_primary")
+  isVerified Boolean   @default(false) @map("is_verified")
+  matchedAt  DateTime? @map("matched_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardNumber])
+  @@index([userId])
+  @@map("bank_cards")
+}
+
+model Transfer {
+  id          Int      @id @default(autoincrement())
+  transferId  String   @unique @map("transfer_id") @db.VarChar(64)
+  senderId    Int      @map("sender_id")
+  recipientId Int      @map("recipient_id")
+  amount      BigInt
+  createdAt   DateTime @default(now()) @map("created_at")
+  sender      User     @relation("SentTransfers", fields: [senderId], references: [id])
+  recipient   User     @relation("ReceivedTransfers", fields: [recipientId], references: [id])
+
+  @@index([senderId])
+  @@index([recipientId])
+  @@map("transfers")
+}
+
+model Payment {
+  id           Int           @id @default(autoincrement())
+  userId       Int           @map("user_id")
+  orderId      String        @unique @map("order_id") @db.VarChar(64)
+  amount       BigInt
+  description  String?       @db.VarChar(255)
+  trackId      BigInt?       @map("track_id")
+  refNumber    String?       @map("ref_number") @db.VarChar(64)
+  status       PaymentStatus @default(pending)
+  cardNumber   String?       @map("card_number") @db.VarChar(32)
+  resultCode   Int?          @map("result_code")
+  verifiedAt   DateTime?     @map("verified_at")
+  expiresAt    DateTime?     @map("expires_at")
+  invoiceChatId BigInt?      @map("invoice_chat_id")
+  invoiceMessageId Int?      @map("invoice_message_id")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  user         User          @relation(fields: [userId], references: [id])
+  order        Order?
+
+  @@index([userId])
+  @@index([trackId])
+  @@index([status])
+  @@map("payments")
+}
+
+model TronWallet {
+  id         Int             @id @default(autoincrement())
+  userId     Int             @unique @map("user_id")
+  address    String          @unique @db.VarChar(64)
+  publicKey  String          @map("public_key") @db.VarChar(256)
+  privateKey String          @map("private_key") @db.VarChar(128)
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+  user       User            @relation(fields: [userId], references: [id])
+  payments   CryptoPayment[]
+
+  @@map("tron_wallets")
+}
+
+model CryptoPayment {
+  id             Int                 @id @default(autoincrement())
+  userId         Int                 @map("user_id")
+  walletId       Int                 @map("wallet_id")
+  orderId        String              @unique @map("order_id") @db.VarChar(64)
+  amountToman    BigInt              @map("amount_toman")
+  amountTrxSun   BigInt              @map("amount_trx_sun")
+  amountTrx      String              @map("amount_trx") @db.VarChar(32)
+  trxIrtRate     String              @map("trx_irt_rate") @db.VarChar(32)
+  status         CryptoPaymentStatus @default(pending)
+  incomingTxHash String?             @map("incoming_tx_hash") @db.VarChar(128)
+  sweepTxHash    String?             @map("sweep_tx_hash") @db.VarChar(128)
+  receivedTrxSun BigInt?             @map("received_trx_sun")
+  expiresAt      DateTime            @map("expires_at")
+  verifiedAt     DateTime?           @map("verified_at")
+  sweptAt        DateTime?           @map("swept_at")
+  invoiceChatId  BigInt?             @map("invoice_chat_id")
+  invoiceMessageId Int?              @map("invoice_message_id")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  user           User                @relation(fields: [userId], references: [id])
+  wallet         TronWallet          @relation(fields: [walletId], references: [id])
+  order          Order?
+
+  @@index([userId])
+  @@index([walletId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("crypto_payments")
+}
+
+model ShopCategory {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique @db.VarChar(64)
+  label     String   @db.VarChar(128)
+  gradient  String   @db.VarChar(255)
+  iconKey   String   @map("icon_key") @db.VarChar(64)
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  orders    Order[]
+
+  @@map("shop_categories")
+}
+
+model Order {
+  id                Int                @id @default(autoincrement())
+  orderId           String             @unique @map("order_id") @db.VarChar(64)
+  userId            Int                @map("user_id")
+  categoryId        Int                @map("category_id")
+  status            OrderStatus        @default(pending)
+  paymentMethod     OrderPaymentMethod @map("payment_method")
+  amountToman       BigInt             @map("amount_toman")
+  walletAmountToman BigInt             @default(0) @map("wallet_amount_toman")
+  quantity          Int?
+  recipientUsername String?            @map("recipient_username") @db.VarChar(64)
+  recipientName     String?            @map("recipient_name") @db.VarChar(128)
+  recipientPhoto    String?            @map("recipient_photo") @db.Text
+  paymentId         Int?               @unique @map("payment_id")
+  cryptoPaymentId   Int?               @unique @map("crypto_payment_id")
+  fulfilledAt       DateTime?          @map("fulfilled_at")
+  failedAt          DateTime?          @map("failed_at")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  user              User               @relation(fields: [userId], references: [id])
+  category          ShopCategory       @relation(fields: [categoryId], references: [id])
+  payment           Payment?           @relation(fields: [paymentId], references: [id])
+  cryptoPayment     CryptoPayment?     @relation(fields: [cryptoPaymentId], references: [id])
+  virtualNumber     VirtualNumber?
+  reactionOrder     ReactionOrder?
+  channelViewOrder  ChannelViewOrder?
+  telegramMemberOrder TelegramMemberOrder?
+  accountShopOrder  AccountShopOrder?
+  supportTickets    SupportTicket[]
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([status])
+  @@map("orders")
+}
+
+model VirtualNumber {
+  id              Int       @id @default(autoincrement())
+  orderDbId       Int       @unique @map("order_db_id")
+  providerOrderId String    @map("provider_order_id") @db.VarChar(64)
+  number          String    @db.VarChar(32)
+  price           BigInt
+  country         String    @db.VarChar(128)
+  range           String    @db.VarChar(32)
+  service         String    @db.VarChar(128)
+  quality         String    @db.VarChar(255)
+  code            String?   @db.VarChar(32)
+  codeReceivedAt  DateTime? @map("code_received_at")
+  loggedOutAt     DateTime? @map("logged_out_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  order           Order     @relation(fields: [orderDbId], references: [id], onDelete: Cascade)
+
+  @@index([providerOrderId])
+  @@index([number])
+  @@map("virtualnumber")
+}
+
+model ReactionOrder {
+  id           Int      @id @default(autoincrement())
+  orderDbId    Int      @unique @map("order_db_id")
+  postLink     String   @map("post_link") @db.VarChar(512)
+  postUsername String   @map("post_username") @db.VarChar(64)
+  postMessageId Int     @map("post_message_id")
+  postTitle    String   @map("post_title") @db.VarChar(128)
+  postPreview  String?  @map("post_preview") @db.VarChar(255)
+  postPhoto    String?  @map("post_photo") @db.Text
+  itemsJson    Json     @map("items_json")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  order        Order    @relation(fields: [orderDbId], references: [id], onDelete: Cascade)
+
+  @@map("reaction_orders")
+}
+
+model ChannelViewOrder {
+  id              Int      @id @default(autoincrement())
+  orderDbId       Int      @unique @map("order_db_id")
+  postLink        String   @map("post_link") @db.VarChar(512)
+  postUsername    String   @map("post_username") @db.VarChar(64)
+  postMessageId   Int      @map("post_message_id")
+  postTitle       String   @map("post_title") @db.VarChar(128)
+  postPreview     String?  @map("post_preview") @db.VarChar(255)
+  postPhoto       String?  @map("post_photo") @db.Text
+  serviceId       Int      @map("service_id")
+  quantity        Int
+  rate            Int
+  toman           Int
+  providerOrderId String?  @map("provider_order_id") @db.VarChar(64)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  order           Order    @relation(fields: [orderDbId], references: [id], onDelete: Cascade)
+
+  @@map("channel_view_orders")
+}
+
+model TelegramMemberOrder {
+  id                 Int      @id @default(autoincrement())
+  orderDbId          Int      @unique @map("order_db_id")
+  channelLink        String   @map("channel_link") @db.VarChar(512)
+  channelUsername    String   @map("channel_username") @db.VarChar(64)
+  channelTitle       String   @map("channel_title") @db.VarChar(128)
+  channelPhoto       String?  @map("channel_photo") @db.Text
+  channelSubscribers String?  @map("channel_subscribers") @db.VarChar(64)
+  serviceId          Int      @map("service_id")
+  quantity           Int
+  rate               Int
+  toman              Int
+  providerOrderId    String?  @map("provider_order_id") @db.VarChar(64)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  order              Order    @relation(fields: [orderDbId], references: [id], onDelete: Cascade)
+
+  @@map("telegram_member_orders")
+}
+
+model AccountShopOrder {
+  id                  Int                   @id @default(autoincrement())
+  orderDbId           Int                   @unique @map("order_db_id")
+  planId              Int                   @map("plan_id")
+  accountCategoryId   String                @map("account_category_id") @db.VarChar(32)
+  planName            String                @map("plan_name") @db.VarChar(160)
+  durationLabel       String                @map("duration_label") @db.VarChar(96)
+  warrantyLabel       String                @map("warranty_label") @db.VarChar(96)
+  fieldValuesJson     Json                  @map("field_values_json")
+  customFieldsJson    Json                  @map("custom_fields_json")
+  toman               Int
+  status              AccountShopOrderStatus @default(registered)
+  deliveryNote        String?               @map("delivery_note") @db.Text
+  deliveredAt         DateTime?             @map("delivered_at")
+  createdAt           DateTime              @default(now()) @map("created_at")
+  updatedAt           DateTime              @updatedAt @map("updated_at")
+  order               Order                 @relation(fields: [orderDbId], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+  @@index([accountCategoryId])
+  @@index([status])
+  @@map("account_shop_orders")
+}
+
+model AutoReactionChannel {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  chatId        BigInt   @map("chat_id")
+  username      String   @db.VarChar(64)
+  title         String   @db.VarChar(255)
+  photoUrl      String?  @map("photo_url") @db.Text
+  isActive      Boolean  @default(false) @map("is_active")
+  randomizeQuantity Boolean @default(false) @map("randomize_quantity")
+  reactionsJson Json     @map("reactions_json")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  processedPosts AutoReactionProcessedPost[]
+
+  @@unique([userId, chatId])
+  @@index([chatId])
+  @@index([userId])
+  @@index([isActive])
+  @@map("auto_reaction_channels")
+}
+
+model AutoReactionProcessedPost {
+  id         Int      @id @default(autoincrement())
+  channelId  Int      @map("channel_id")
+  messageId  Int      @map("message_id")
+  orderId    String?  @map("order_id") @db.VarChar(64)
+  status     String   @db.VarChar(32)
+  createdAt  DateTime @default(now()) @map("created_at")
+  channel    AutoReactionChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, messageId])
+  @@index([channelId])
+  @@map("auto_reaction_processed_posts")
+}
+
+model AutoChannelViewChannel {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
+  chatId            BigInt   @map("chat_id")
+  username          String   @db.VarChar(64)
+  title             String   @db.VarChar(255)
+  photoUrl          String?  @map("photo_url") @db.Text
+  isActive          Boolean  @default(false) @map("is_active")
+  randomizeQuantity Boolean  @default(false) @map("randomize_quantity")
+  serviceId         Int      @map("service_id")
+  quantity          Int      @default(0)
+  rate              Int      @default(0)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  processedPosts    AutoChannelViewProcessedPost[]
+
+  @@unique([userId, chatId])
+  @@index([chatId])
+  @@index([userId])
+  @@index([isActive])
+  @@map("auto_channel_view_channels")
+}
+
+model AutoChannelViewProcessedPost {
+  id         Int      @id @default(autoincrement())
+  channelId  Int      @map("channel_id")
+  messageId  Int      @map("message_id")
+  orderId    String?  @map("order_id") @db.VarChar(64)
+  status     String   @db.VarChar(32)
+  createdAt  DateTime @default(now()) @map("created_at")
+  channel    AutoChannelViewChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, messageId])
+  @@index([channelId])
+  @@map("auto_channel_view_processed_posts")
+}
+
+model ProductViewStat {
+  id         Int      @id @default(autoincrement())
+  productKey String   @unique @map("product_key") @db.VarChar(96)
+  viewCount  BigInt   @default(0) @map("view_count")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("product_view_stats")
+}
+
+model ProductViewDaily {
+  id         Int      @id @default(autoincrement())
+  productKey String   @map("product_key") @db.VarChar(96)
+  day        DateTime @db.Date
+  viewCount  BigInt   @default(0) @map("view_count")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([productKey, day])
+  @@index([day])
+  @@map("product_view_daily")
+}
+
+model SiteOnlineStat {
+  id          Int      @id @default(1)
+  onlineCount Int      @default(0) @map("online_count")
+  peakOnline  Int      @default(0) @map("peak_online")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("site_online_stats")
+}
+
+enum ClubRewardType {
+  percent_discount
+  fixed_discount
+  free_item
+  custom
+}
+
+model ClubReward {
+  id           Int                    @id @default(autoincrement())
+  title        String                 @db.VarChar(128)
+  description  String                 @db.VarChar(512)
+  pointsCost   Int                    @map("points_cost")
+  rewardType   ClubRewardType         @map("reward_type")
+  rewardValue  String                 @map("reward_value") @db.VarChar(255)
+  stock        Int?
+  isActive     Boolean                @default(true) @map("is_active")
+  sortOrder    Int                    @default(0) @map("sort_order")
+  createdAt    DateTime               @default(now()) @map("created_at")
+  updatedAt    DateTime               @updatedAt @map("updated_at")
+  redemptions  ClubRewardRedemption[]
+
+  @@index([isActive, sortOrder])
+  @@map("club_rewards")
+}
+
+model ClubRewardRedemption {
+  id         Int        @id @default(autoincrement())
+  rewardId   Int        @map("reward_id")
+  userId     Int        @map("user_id")
+  pointsSpent Int       @map("points_spent")
+  status     String     @default("pending") @db.VarChar(32)
+  note       String?    @db.VarChar(255)
+  createdAt  DateTime   @default(now()) @map("created_at")
+  reward     ClubReward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([rewardId])
+  @@map("club_reward_redemptions")
+}
+
+enum DiscountType {
+  percent
+  fixed
+}
+
+model DiscountCode {
+  id            Int          @id @default(autoincrement())
+  code          String       @unique @db.VarChar(64)
+  title         String       @db.VarChar(128)
+  description   String?      @db.VarChar(512)
+  discountType  DiscountType @map("discount_type")
+  discountValue Int          @map("discount_value")
+  maxUses       Int?         @map("max_uses")
+  usedCount     Int          @default(0) @map("used_count")
+  minOrderToman BigInt?      @map("min_order_toman")
+  productKey    String?      @map("product_key") @db.VarChar(96)
+  startsAt      DateTime?    @map("starts_at")
+  expiresAt     DateTime?    @map("expires_at")
+  isActive      Boolean      @default(true) @map("is_active")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@map("discount_codes")
+}
+
+model ProductPricing {
+  id               Int      @id @default(autoincrement())
+  productKey       String   @unique @map("product_key") @db.VarChar(96)
+  label            String   @db.VarChar(128)
+  markupPercent    Int      @default(0) @map("markup_percent")
+  fixedAddToman    BigInt   @default(0) @map("fixed_add_toman")
+  isActive         Boolean  @default(true) @map("is_active")
+  note             String?  @db.VarChar(255)
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("product_pricing")
+}
+
+enum SupportTicketStatus {
+  open
+  answered
+  closed
+}
+
+enum SupportTicketCategory {
+  sales
+  product
+  kyc
+  wallet
+  other
+}
+
+model SupportTicket {
+  id          Int                    @id @default(autoincrement())
+  ticketCode  String                 @unique @map("ticket_code") @db.VarChar(32)
+  userId      Int                    @map("user_id")
+  category    SupportTicketCategory  @default(other)
+  orderId     String?                @map("order_id") @db.VarChar(64)
+  subject     String                 @db.VarChar(160)
+  status      SupportTicketStatus    @default(open)
+  createdAt   DateTime               @default(now()) @map("created_at")
+  updatedAt   DateTime               @updatedAt @map("updated_at")
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order       Order?                 @relation(fields: [orderId], references: [orderId], onDelete: SetNull)
+  messages    SupportTicketMessage[]
+
+  @@index([userId, updatedAt])
+  @@index([status, updatedAt])
+  @@index([orderId])
+  @@map("support_tickets")
+}
+
+model SupportTicketMessage {
+  id         Int           @id @default(autoincrement())
+  ticketId   Int           @map("ticket_id")
+  senderRole String        @map("sender_role") @db.VarChar(16)
+  body       String        @db.Text
+  imageData  String?       @map("image_data") @db.LongText
+  createdAt  DateTime      @default(now()) @map("created_at")
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@map("support_ticket_messages")
+}
+
+enum AdminSystemChannelSlot {
+  admin_report
+  purchase_report
+  notification
+}
+
+/** System Telegram channels for admin reports / notifications (one per slot). */
+model AdminSystemChannel {
+  id        Int                    @id @default(autoincrement())
+  slotKey   AdminSystemChannelSlot @unique @map("slot_key")
+  chatId    BigInt                 @map("chat_id")
+  username  String                 @db.VarChar(64)
+  title     String                 @db.VarChar(255)
+  isActive  Boolean                @default(true) @map("is_active")
+  createdAt DateTime               @default(now()) @map("created_at")
+  updatedAt DateTime               @updatedAt @map("updated_at")
+
+  @@index([chatId])
+  @@index([isActive])
+  @@map("admin_system_channels")
+}
+
+/** Rotating shop homepage banners (main + thumbnail images). */
+model ShopBanner {
+  id            Int      @id @default(autoincrement())
+  title         String   @db.VarChar(128)
+  productKey    String   @map("product_key") @db.VarChar(96)
+  mainImageUrl  String   @map("main_image_url") @db.VarChar(512)
+  thumbImageUrl String   @map("thumb_image_url") @db.VarChar(512)
+  sortOrder     Int      @default(0) @map("sort_order")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive, sortOrder])
+  @@map("shop_banners")
+}
+
+/** Admin-configured account shop plans (Roboticvn-assisted catalog). */
+model AccountShopPlan {
+  id                    Int      @id @default(autoincrement())
+  categoryId            String   @map("category_id") @db.VarChar(32)
+  name                  String   @db.VarChar(160)
+  durationLabel         String   @map("duration_label") @db.VarChar(96)
+  warrantyType          String   @map("warranty_type") @db.VarChar(16)
+  warrantyDays          Int?     @map("warranty_days")
+  roboticvnProductId    String   @map("roboticvn_product_id") @db.VarChar(64)
+  roboticvnVariantId    String   @map("roboticvn_variant_id") @db.VarChar(64)
+  roboticvnVariantTitle String   @map("roboticvn_variant_title") @db.VarChar(255)
+  pricingMode           String   @map("pricing_mode") @db.VarChar(16)
+  fixedToman            Int?     @map("fixed_toman")
+  markupPercent         Int      @default(0) @map("markup_percent")
+  customFields          Json     @default("[]") @map("custom_fields")
+  noticeKind            String   @default("none") @map("notice_kind") @db.VarChar(16)
+  noticeText            String?  @map("notice_text") @db.VarChar(500)
+  sortOrder             Int      @default(0) @map("sort_order")
+  isActive              Boolean  @default(true) @map("is_active")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@index([categoryId, isActive, sortOrder])
+  @@index([roboticvnVariantId])
+  @@map("account_shop_plans")
+}

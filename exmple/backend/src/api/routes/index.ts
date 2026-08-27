@@ -1,0 +1,50 @@
+import type { FastifyInstance } from 'fastify'
+import { healthRoutes } from './health.js'
+import { authRoutes } from './auth.js'
+import { userRoutes } from './users.js'
+import { paymentRoutes } from './payments.js'
+import { transferRoutes } from './transfers.js'
+import { cryptoPaymentRoutes } from './crypto-payments.js'
+import { walletRoutes } from './wallet.js'
+import { starsRoutes } from './stars.js'
+import { premiumRoutes } from './premium.js'
+import { virtualNumberRoutes } from './virtual-number.js'
+import { reactionRoutes } from './reaction.js'
+import { channelViewsRoutes } from './channel-views.js'
+import { telegramMembersRoutes } from './telegram-members.js'
+import { chatgptRoutes } from './chatgpt.js'
+import { channelLockRoutes } from './channel-lock.js'
+import { orderRoutes } from './orders.js'
+import { kycRoutes } from './kyc.js'
+import { cardRoutes } from './cards.js'
+import { analyticsRoutes } from './analytics.js'
+import { clubRoutes } from './club.js'
+import { adminRoutes } from './admin.js'
+import { supportRoutes } from './support.js'
+import { shopPricingRoutes } from './shop-pricing.js'
+
+export async function registerRoutes(app: FastifyInstance): Promise<void> {
+  await app.register(healthRoutes, { prefix: '/api' })
+  await app.register(authRoutes, { prefix: '/api/auth' })
+  await app.register(userRoutes, { prefix: '/api/users' })
+  await app.register(kycRoutes, { prefix: '/api/kyc' })
+  await app.register(cardRoutes, { prefix: '/api/cards' })
+  await app.register(analyticsRoutes, { prefix: '/api/analytics' })
+  await app.register(clubRoutes, { prefix: '/api/club' })
+  await app.register(adminRoutes, { prefix: '/api/admin' })
+  await app.register(supportRoutes, { prefix: '/api/support' })
+  await app.register(shopPricingRoutes, { prefix: '/api/shop' })
+  await app.register(paymentRoutes, { prefix: '/api/payments' })
+  await app.register(cryptoPaymentRoutes, { prefix: '/api/payments/crypto' })
+  await app.register(transferRoutes, { prefix: '/api/transfers' })
+  await app.register(walletRoutes, { prefix: '/api/wallet' })
+  await app.register(starsRoutes, { prefix: '/api/stars' })
+  await app.register(premiumRoutes, { prefix: '/api/premium' })
+  await app.register(virtualNumberRoutes, { prefix: '/api/virtual-number' })
+  await app.register(reactionRoutes, { prefix: '/api/reaction' })
+  await app.register(channelViewsRoutes, { prefix: '/api/channel-views' })
+  await app.register(telegramMembersRoutes, { prefix: '/api/telegram-members' })
+  await app.register(chatgptRoutes, { prefix: '/api/chatgpt' })
+  await app.register(channelLockRoutes, { prefix: '/api/channel-lock' })
+  await app.register(orderRoutes, { prefix: '/api/orders' })
+}

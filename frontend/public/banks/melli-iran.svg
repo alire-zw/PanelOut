@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+  <title>خطای دسترسی</title>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+  <link rel="icon" href="https://sep.ir/uploads/sep/fav/apple-touch-icon.png" />
+  <link rel="stylesheet" href="https://sep.ir/uploads/landing/css/vazir.css">
+
+  <style>
+    @keyframes bluebar {
+
+      0%,
+      10% {
+        width: 15%;
+        left: 0;
+        background-color: #007dff;
+      }
+
+      40%,
+      60% {
+        width: 100%;
+        left: 0;
+        background-color: #007dff;
+      }
+
+      90%,
+      100% {
+        width: 15%;
+        left: 85%;
+        background-color: #007dff;
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    body {
+      font-family: 'VazirMatn', 'Vazir', 'IRANYekan', 'IRANSans', 'Dana', sans-serif;
+      background-color: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+    }
+
+    .container {
+      background-color: #fff;
+      border-radius: 24px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      padding: 24px;
+      width: 100%;
+      max-width: 768px;
+      text-align: center;
+    }
+
+    header {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .logo-placeholder {
+      font-size: 12px;
+      font-weight: 700;
+      color: #007dff;
+    }
+
+    main {
+      margin-bottom: 24px;
+    }
+
+    .illustration-placeholder {
+      margin: 0 auto 16px;
+      position: relative;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .illustration-placeholder img {
+      max-width: 100%;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #011526;
+      margin-bottom: 38px;
+    }
+
+    .geo-location {
+      min-height: 46px;
+      font-size: 12px;
+      color: #5c677e;
+      max-width: 500px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .ip-address {
+      color: #007dff;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .proccess-bar {
+      width: 120px;
+      height: 4px;
+      margin: 0 auto 8px;
+      flex: none;
+      flex-grow: 0;
+      order: 0;
+      align-self: stretch;
+      flex-grow: 0;
+      border-radius: 4px;
+      direction: ltr;
+      background-color: #e5e7eb;
+    }
+
+    .indeterminate {
+      width: 50%;
+      left: 50%;
+      position: relative;
+      animation-timing-function: linear;
+      animation: bluebar 1.5s infinite ease;
+      animation-direction: alternate;
+    }
+
+    .bar {
+      height: 100%;
+      border-radius: 15px;
+      transition: all 0.5s linear;
+      background-color: #006dde;
+    }
+
+    .security-code {
+      background-color: #007dff;
+      border-radius: 12px;
+      padding: 12px 24px;
+      display: inline-block;
+      margin: 0 auto 12px;
+    }
+
+    .security-code p {
+      font-size: 14px;
+      color: #f2f8ff;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .security-code span {
+      font-size: 18px;
+      color: #fefffb;
+      letter-spacing: 1px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .notice {
+      background-color: #f5f7fa;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      text-align: right;
+      margin-bottom: 24px;
+    }
+
+    .notice .icon {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border: 3px solid #f82b46;
+      color: #f82b46;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 18px;
+      margin-left: 16px;
+      line-height: 26px;
+      text-align: center;
+    }
+
+    .notice p {
+      font-size: 0.8em;
+      color: #5c677e;
+      line-height: 1.5;
+      text-align: justify;
+    }
+
+    .notice p a {
+      color: #007dff;
+      text-decoration: none;
+    }
+
+    footer {
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+    }
+
+    .footer-wrap {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-wrap:not(:last-child) {
+      margin-bottom: 8px;
+    }
+
+    .contact-info {
+      font-size: 14px;
+      color: #011526;
+    }
+
+    .contact-info .label {
+      color: #011526;
+    }
+
+    .contact-info a {
+      color: #007dff;
+      text-decoration: none;
+      direction: ltr;
+      display: inline-block;
+    }
+
+    .contact-info a:hover {
+      opacity: 0.9;
+    }
+
+    .copyright {
+      font-size: 12px;
+      color: #5c677e;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+
+      .footer-wrap {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 20px;
+      }
+
+      .security-code span {
+        font-size: 16px;
+        letter-spacing: 1px;
+      }
+
+      .notice {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .notice .icon {
+        margin-left: 0;
+        margin-bottom: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-placeholder">
+        <img src="https://sep.ir/uploads/dist/waf/img/logo-full.png" alt="پرداخت الکترونیک سامان کیش" width="142" />
+      </div>
+    </header>
+    <main>
+      <div class="illustration-placeholder">
+        <img src="https://sep.ir/uploads/dist/waf/img/state-access-denied.png" alt="دسترسی غیرمجاز" width="320" />
+      </div>
+      <h1>شما مجاز به انجام این عملیات نیستید!</h1>
+      <div id="userIpInfo" class="geo-location">
+        <div class="proccess-bar">
+          <div class="indeterminate bar">
+            <div class="progress"></div>
+          </div>
+        </div>
+        <span>در حال شناسایی موقعیت جغرافیایی و آدرس آی‌پی (IP) کاربر...</span>
+      </div>
+      <div class="security-code">
+        <p>کد رهگیری پشتیبانی امنیت</p>
+        <span>
+          8336514853358888096
+        </span>
+      </div>
+    </main>
+    <section class="notice">
+      <div class="icon">!</div>
+      <p>توجه داشته باشید که <a href="#">۲۰۰۰۰۸۴۰۸۰</a> و <a href="#">۰۹۹۹۹۹۸۴۰۸۰</a> تنها شماره‌هایی هستند که سپ از طریق آن برای کاربران و پذیرندگان خود
+        پیامک (اس‌ام‌اس) ارسال می‌کند. بنابراین ارسال هرگونه پیامک تحت عنوان سپ، با هر شماره دیگری تخلف و سوءاستفاده از
+        نام سپ است. در صورت دریافت چنین پیامکی، لطفاً جهت پیگیری قانونی آن را به <a
+          href="mailto:info@sep.ir">info@sep.ir</a> اطلاع دهید.</p>
+    </section>
+    <footer>
+      <div class="footer-wrap">
+        <div class="contact-info">
+          <span class="label">مرکز شبانه‌روزی ارتباط با مشتریان:</span>
+          <a href="tel:02184080">۰۲۱-۸۴۰۸۰</a>
+        </div>
+        <div class="contact-info">
+          <span class="label">مرکز عملیات امنیت و شکار تهدیدات سایبری:</span>
+          <a href="tel:02184345777">۰۲۱-۸۴۳۴۵۷۷۷</a>
+        </div>
+      </div>
+      <div class="footer-wrap">
+        <div class="contact-info">
+          <span class="label">پست الکترونیک:</span>
+          <a href="mailto:info@sep.ir">info@sep.ir</a>
+        </div>
+        <div class="contact-info">
+          <span class="label">نمابر:</span>
+          <a href="tel:02188219140">۰۲۱-۸۸۲۱۹۱۴۰</a>
+        </div>
+      </div>
+    </footer>
+    <div class="copyright">
+      <p>تمامی حقوق متعلق به شرکت پرداخت الکترونیک سامان کیش (سپ) می‌باشد.</p>
+    </div>
+  </div>
+  <script>
+    async function getIPInfo() {
+      const el = document.getElementById('userIpInfo');
+      try {
+        const ipRes = await fetch("https://api.ipify.org/?format=json");
+        const ipData = await ipRes.json();
+        const ip = ipData.ip;
+        const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
+        const geo = await geoRes.json();
+		el.innerHTML = `<span class="ip-address">IP: ${ip}</span><br />Geo-Location: ${geo.city}, ${geo.region}, ${geo.country_name}`;
+      } catch (e) {
+	    el.innerHTML = `<span class="ip-address">IP: Unknown</span><br />Geo-Location: Unknown`;
+      }
+    }
+    getIPInfo();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,169 @@
+.shop-popular {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  margin-bottom: 16px;
+}
+
+.shop-popular__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.shop-popular__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.shop-popular__title-accent {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.shop-popular__hint {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.shop-popular__scroller {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.shop-popular__card {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 4px;
+  width: 118px;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--surface);
+  overflow: hidden;
+  font: inherit;
+  color: inherit;
+  text-align: right;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shop-popular__card:active:not(:disabled) {
+  transform: scale(0.985);
+  opacity: 0.94;
+}
+
+.shop-popular__card--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shop-popular__rank {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: color-mix(in srgb, var(--text) 8%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shop-popular__icon {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  background: var(--card-gradient);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.shop-popular__icon--account {
+  background: #000000;
+  border: 1px solid var(--border-subtle);
+  box-shadow: none;
+}
+
+[data-theme='light'] .shop-popular__icon--account {
+  background: #ffffff;
+}
+
+.shop-popular__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.shop-popular__label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shop-popular__metric {
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shop-popular__title-skel {
+  width: 110px;
+  height: 14px;
+  margin: 0 0 12px auto;
+  border-radius: 6px;
+  background: var(--surface-elevated);
+  animation: shop-popular-pulse 1.5s ease-in-out infinite;
+}
+
+.shop-popular__card-skel {
+  flex: 0 0 auto;
+  width: 118px;
+  height: 104px;
+  border-radius: 14px;
+  background: var(--surface-elevated);
+  animation: shop-popular-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes shop-popular-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

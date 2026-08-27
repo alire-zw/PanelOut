@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.env.local
+*.log
+.DS_Store
+uploads/shop-banners/*
+!uploads/.gitkeep
+!uploads/shop-banners/.gitkeep

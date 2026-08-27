@@ -1,0 +1,345 @@
+@import '../styles/shop-rise.css';
+
+.dash {
+  margin: -12px -16px 0;
+  min-height: 100%;
+  overflow-x: hidden;
+  padding-bottom: 8px;
+}
+
+.dash__content {
+  padding: 4px var(--page-padding-x) 0;
+}
+
+.dash__section {
+  margin: 0;
+}
+
+.dash__section-title {
+  margin: 16px 0 10px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.dash__section:first-child .dash__section-title {
+  margin-top: 0;
+}
+
+.dash__order-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--surface);
+  color: inherit;
+  cursor: pointer;
+  text-align: start;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.dash__order-card:active {
+  transform: scale(0.985);
+  opacity: 0.94;
+}
+
+.dash__order-card--static {
+  cursor: default;
+}
+
+.dash__order-card--static:active {
+  transform: none;
+  opacity: 1;
+}
+
+.dash__order-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dash__order-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.dash__order-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dash__order-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash__order-meta {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash__order-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.dash__order-time {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.dash__order-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.dash__order-foot-start {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dash__order-pay {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.dash__order-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.dash__order-id {
+  min-width: 0;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash__order-price {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dash__order-price span {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-inline-start: 3px;
+}
+
+.dash__badge {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.dash__badge--pending {
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
+  color: var(--warning);
+}
+
+.dash__badge--processing {
+  background: color-mix(in srgb, var(--info) 14%, transparent);
+  color: var(--info);
+}
+
+.dash__badge--done {
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success);
+}
+
+.dash__badge--failed {
+  background: color-mix(in srgb, var(--error) 14%, transparent);
+  color: var(--error);
+}
+
+.dash__empty {
+  min-height: 112px;
+  padding: 0;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.dash__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dash__actions-row {
+  display: flex;
+  gap: 8px;
+}
+
+.dash__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.dash__action:active {
+  transform: scale(0.98);
+}
+
+.dash__actions-row .dash__action {
+  flex: 1;
+}
+
+.dash__action--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.dash__action--primary:active {
+  opacity: 0.92;
+}
+
+.dash__wallet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+}
+
+.dash__wallet-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.dash__wallet-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+.dash__wallet-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.dash__wallet-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dash__wallet-desc {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.dash__wallet-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dash__wallet-points {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.dash__wallet-points strong {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.dash__wallet-points span {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dash__wallet-btn {
+  padding: 9px 14px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dash__wallet-btn:active {
+  transform: scale(0.98);
+  opacity: 0.92;
+}

@@ -1,0 +1,58 @@
+export const SHOP_CATEGORIES = [
+  {
+    slug: 'telegram-stars',
+    label: 'استارز تلگرام',
+    gradient: 'linear-gradient(135deg, #ffe566 0%, #ffb800 45%, #ff9500 100%)',
+    iconKey: 'stars',
+    sortOrder: 1,
+  },
+  {
+    slug: 'telegram-premium',
+    label: 'تلگرام پریمیوم',
+    gradient: 'linear-gradient(135deg, #7b61ff 0%, #9d47ea 50%, #c471ed 100%)',
+    iconKey: 'telegram',
+    sortOrder: 2,
+  },
+  {
+    slug: 'virtual-number',
+    label: 'شماره مجازی',
+    gradient: 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%)',
+    iconKey: 'phone',
+    sortOrder: 3,
+  },
+  {
+    slug: 'reaction',
+    label: 'ری‌اکشن',
+    gradient: 'linear-gradient(135deg, #fb7185 0%, #f43f5e 50%, #e11d48 100%)',
+    iconKey: 'social',
+    sortOrder: 4,
+  },
+  {
+    slug: 'channel-views',
+    label: 'سین کانال',
+    gradient: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%)',
+    iconKey: 'view',
+    sortOrder: 5,
+  },
+  {
+    slug: 'telegram-gifts',
+    label: 'گیفت تلگرام',
+    gradient: 'linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%)',
+    iconKey: 'shop',
+    sortOrder: 6,
+  },
+  {
+    slug: 'telegram-members',
+    label: 'ممبر تلگرام',
+    gradient: 'linear-gradient(135deg, #0088cc 0%, #229ed9 50%, #37aee2 100%)',
+    iconKey: 'members',
+    sortOrder: 7,
+  },
+  {
+    slug: 'chatgpt',
+    label: 'خرید اکانت',
+    gradient: 'linear-gradient(135deg, #10a37f 0%, #1a7f64 100%)',
+    iconKey: 'chatgpt',
+    sortOrder: 8,
+  },
+] as const

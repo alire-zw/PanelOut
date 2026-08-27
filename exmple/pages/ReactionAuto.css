@@ -1,0 +1,433 @@
+.reaction-auto__loading {
+  padding: 28px 12px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.reaction-auto__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 24vh;
+  padding: 16px 12px 8px;
+  text-align: center;
+}
+
+.reaction-auto__title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.reaction-auto__desc {
+  margin: 0;
+  max-width: 280px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.reaction-auto__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.reaction-auto__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 58px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  box-sizing: border-box;
+}
+
+.reaction-auto__row.is-off {
+  opacity: 0.78;
+}
+
+.reaction-auto__row--skeleton {
+  pointer-events: none;
+  min-height: 52px;
+  height: 52px;
+  padding: 0 12px;
+  border-radius: 12px;
+  gap: 10px;
+}
+
+.reaction-auto__row--skeleton .reaction-auto__row-main {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  cursor: default;
+}
+
+.reaction-auto__skel {
+  display: block;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text-muted) 18%, var(--surface));
+  animation: reaction-auto-pulse 1.2s ease-in-out infinite;
+}
+
+.reaction-auto__skel-title {
+  width: 44%;
+  height: 12px;
+}
+
+.reaction-auto__skel-meta {
+  width: 58%;
+  height: 10px;
+}
+
+.reaction-auto__skel-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.reaction-auto__row--skeleton:nth-child(2) .reaction-auto__skel-title {
+  width: 52%;
+}
+
+.reaction-auto__row--skeleton:nth-child(2) .reaction-auto__skel-meta {
+  width: 40%;
+}
+
+.reaction-auto__row--skeleton:nth-child(3) .reaction-auto__skel-title {
+  width: 36%;
+}
+
+.reaction-auto__row--skeleton:nth-child(3) .reaction-auto__skel-meta {
+  width: 64%;
+}
+
+@keyframes reaction-auto-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.reaction-auto__row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reaction-auto__row-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: color-mix(in srgb, #f43f5e 14%, var(--surface-elevated));
+  color: #f43f5e;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.reaction-auto__row-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.reaction-auto__row-body {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reaction-auto__row-title-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.reaction-auto__row-title {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reaction-auto__row-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.reaction-auto__row-username {
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--text-muted);
+  direction: ltr;
+  unicode-bidi: plaintext;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reaction-auto__row-emojis {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.reaction-auto__row-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1px solid color-mix(in srgb, #f43f5e 28%, var(--border-subtle));
+  background: color-mix(in srgb, #f43f5e 8%, var(--surface));
+}
+
+.reaction-auto__row-emoji-more {
+  font-size: 10px;
+  font-weight: 600;
+  color: #f43f5e;
+  line-height: 1;
+}
+
+.reaction-auto__badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 18px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.reaction-auto__badge--on {
+  border-color: color-mix(in srgb, #f43f5e 35%, var(--border-subtle));
+  background: color-mix(in srgb, #f43f5e 12%, var(--surface-elevated));
+  color: #f43f5e;
+}
+
+.reaction-auto__row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.reaction-auto__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.reaction-auto__icon-btn:active {
+  transform: scale(0.95);
+  color: #f43f5e;
+}
+
+.reaction-auto__icon-btn.is-pause {
+  color: #fb7185;
+  border-color: color-mix(in srgb, #fb7185 28%, var(--border-subtle));
+  background: color-mix(in srgb, #fb7185 10%, var(--surface));
+}
+
+.reaction-auto__icon-btn.is-danger:active {
+  color: #fb7185;
+}
+
+.reaction-auto__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.reaction-auto__step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.reaction-auto__step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #fb7185 0%, #f43f5e 50%, #e11d48 100%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.reaction-auto__step-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.reaction-auto__step-body strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.reaction-auto__step-body p {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.reaction-auto__link-btn {
+  min-height: 34px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 10px;
+  background: color-mix(in srgb, #f43f5e 12%, var(--surface-elevated));
+  color: #f43f5e;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reaction-auto__selected {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.reaction-auto__summary {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, #f43f5e 28%, var(--border-subtle));
+  background: color-mix(in srgb, #f43f5e 8%, var(--surface));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.reaction-auto__summary strong {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.reaction-auto__summary strong span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.reaction-auto__random {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--surface);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reaction-auto__random-input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: #f43f5e;
+  cursor: pointer;
+}
+
+.reaction-auto__random-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.reaction-auto__random-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.reaction-auto__random-desc {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}

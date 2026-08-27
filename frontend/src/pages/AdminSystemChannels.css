@@ -1,0 +1,222 @@
+﻿/* System channels admin page */
+
+.admin-sys-ch__intro {
+  margin: 0 var(--page-padding-x) 14px;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.admin-sys-ch__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 var(--page-padding-x);
+}
+
+.admin-sys-ch__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  box-sizing: border-box;
+}
+
+.admin-sys-ch__row.is-locked {
+  opacity: 0.72;
+}
+
+.admin-sys-ch__row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-sys-ch__row-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-sys-ch__row-meta {
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-sys-ch__row-meta--id {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: right;
+}
+
+.admin-sys-ch__row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.admin-sys-ch__row-actions .admin-icon-btn.is-on {
+  color: #fb7185;
+  border-color: color-mix(in srgb, #fb7185 28%, var(--border-subtle));
+  background: color-mix(in srgb, #fb7185 10%, var(--surface));
+}
+
+.admin-sys-ch__row-actions .admin-icon-btn.is-off {
+  color: var(--text-muted);
+}
+
+.admin-sys-ch__add-btn {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border-subtle));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  color: color-mix(in srgb, var(--accent) 85%, var(--text));
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.admin-sys-ch__add-btn:active {
+  transform: scale(0.96);
+}
+
+.admin-sys-ch__add {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 var(--page-padding-x);
+}
+
+.admin-sys-ch__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.admin-sys-ch__steps p {
+  margin: 0;
+}
+
+.admin-sys-ch__error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.admin-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.15s ease,
+    color 0.15s ease;
+}
+
+.admin-icon-btn:active {
+  transform: scale(0.95);
+}
+
+.admin-icon-btn.is-danger {
+  color: var(--danger);
+}
+
+.admin-icon-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.admin-sys-ch__btn {
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.admin-sys-ch__btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.admin-sys-ch__btn--ghost {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  color: color-mix(in srgb, var(--accent) 90%, var(--text));
+}
+
+.admin-sys-ch__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-sys-ch__field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.admin-sys-ch__field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg);
+}
+
+.admin-sys-ch__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: left;
+  direction: ltr;
+}

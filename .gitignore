@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs / cache
+logs/
+*.log
+npm-debug.log*
+.pnpm-debug.log*
+.cache/
+.turbo/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Coverage / test
+coverage/
+
+# Local agent / tooling
+.cursor/
+agent-transcripts/

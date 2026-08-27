@@ -1,0 +1,133 @@
+.charge-history__summary {
+  padding: 10px 12px;
+}
+
+.charge-history__summary-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 12px;
+}
+
+.charge-history__summary-item {
+  min-width: 0;
+}
+
+.charge-history__summary-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.charge-history__summary-top .wallet__card-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.charge-history__summary-top .wallet__card-label {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.charge-history__summary-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border-subtle);
+}
+
+.charge-history__summary .wallet__balance {
+  margin-top: 4px;
+  direction: ltr;
+  unicode-bidi: plaintext;
+  justify-content: flex-start;
+}
+
+.charge-history__summary .wallet__balance-amount {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.charge-history__summary .wallet__balance-unit {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.charge-history__summary .wallet__balance-skeleton {
+  width: 72px;
+  height: 16px;
+}
+
+.charge-history__summary-icon--charge {
+  color: #22c55e;
+  background: color-mix(in srgb, #22c55e 10%, transparent);
+}
+
+.charge-history__summary-icon--purchase {
+  color: #e11d48;
+  background: color-mix(in srgb, #e11d48 10%, transparent);
+}
+
+.charge-history__club {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.charge-history__club-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.charge-history__club .wallet__card-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+.charge-history__club .wallet__card-label {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.charge-history__club-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+  direction: ltr;
+  unicode-bidi: plaintext;
+}
+
+.charge-history__club-value .wallet__balance-amount {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.charge-history__club-value .wallet__balance-unit {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.charge-history__club .wallet__balance-skeleton {
+  width: 56px;
+  height: 14px;
+}
+
+.charge-history__summary-icon--club {
+  color: #d97706;
+  background: color-mix(in srgb, #d97706 12%, transparent);
+}
