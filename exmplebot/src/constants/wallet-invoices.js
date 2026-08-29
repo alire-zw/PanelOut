@@ -1,0 +1,2 @@
+export const USAGE_INVOICE_BATCH_SIZE = 20;
+export const WALLET_INVOICES_PAGE_SIZE = 5;

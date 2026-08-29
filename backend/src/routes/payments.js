@@ -8,12 +8,24 @@ import {
   getBankCardsCached,
   syncBankCardsCached,
 } from "../db/bankCardsCache.js";
+import {
+  getPaymentSettings,
+  isTronPaymentAvailable,
+} from "../db/paymentSettings.js";
+import { findTronTransactionById } from "../db/tronTransactions.js";
 import { invalidateWalletTransactionsCache } from "../db/walletTransactions.js";
 import { invalidateAdminChargesCache } from "../db/adminChargesCache.js";
 import { readJsonBody } from "../http/body.js";
 import { sendJson } from "../http/respond.js";
 import { attachSignedReceiptUrl } from "../lib/signedUploads.js";
+import { config } from "../config.js";
 import { log } from "../lib/logger.js";
+import {
+  calculateTrxFromIrt,
+  getTrxPriceIrt,
+} from "../services/pricing/swapwallet.service.js";
+import { getOrCreateTronWallet } from "../services/tron/tron-wallet.service.js";
+import { getTronTxExplorerUrl } from "../services/tron/tron-explorer.js";
 
 function sendRouteError(res, error) {
   const status = error.status || 500;
@@ -39,6 +51,102 @@ export async function handlePaymentRoutes(req, res, path) {
   if (!path.startsWith("/api/payments")) return false;
 
   try {
+    if (req.method === "GET" && path === "/api/payments/methods") {
+      await loadAuthedUser(req);
+      const [settings, cardsPayload] = await Promise.all([
+        getPaymentSettings(),
+        getBankCardsCached("active"),
+      ]);
+      const tron = isTronPaymentAvailable(settings, config.tronConfigured);
+      const card = cardsPayload.cards.length > 0;
+      sendJson(res, 200, {
+        ok: true,
+        methods: { tron, card },
+        tronConfigured: config.tronConfigured,
+      });
+      return true;
+    }
+
+    if (req.method === "GET" && path === "/api/payments/tron/price") {
+      await loadAuthedUser(req);
+      const settings = await getPaymentSettings();
+      if (!isTronPaymentAvailable(settings, config.tronConfigured)) {
+        sendJson(res, 503, { ok: false, error: "پرداخت ترون فعال نیست" });
+        return true;
+      }
+      const trxPriceIrt = await getTrxPriceIrt();
+      sendJson(res, 200, { ok: true, trxPriceIrt });
+      return true;
+    }
+
+    if (req.method === "GET" && path === "/api/payments/tron/deposit") {
+      const { telegramUser } = await loadAuthedUser(req);
+      const settings = await getPaymentSettings();
+      if (!isTronPaymentAvailable(settings, config.tronConfigured)) {
+        sendJson(res, 503, { ok: false, error: "پرداخت ترون فعال نیست" });
+        return true;
+      }
+
+      const url = new URL(req.url || "/", "http://localhost");
+      const amountRaw = url.searchParams.get("amount");
+      const amountToman = amountRaw ? Number(amountRaw) : 0;
+
+      const [wallet, trxPriceIrt] = await Promise.all([
+        getOrCreateTronWallet(telegramUser.id),
+        getTrxPriceIrt(),
+      ]);
+
+      const suggestedTrx =
+        amountToman > 0 ? calculateTrxFromIrt(amountToman, trxPriceIrt) : null;
+
+      log.event("api", `GET /api/payments/tron/deposit tg:${telegramUser.id}`);
+      sendJson(res, 200, {
+        ok: true,
+        deposit: {
+          address: wallet.address,
+          trxPriceIrt,
+          amountToman: amountToman > 0 ? amountToman : null,
+          suggestedTrx,
+        },
+      });
+      return true;
+    }
+
+    if (req.method === "GET" && path.startsWith("/api/payments/tron/transactions/")) {
+      const { telegramUser } = await loadAuthedUser(req);
+      const idPart = path.slice("/api/payments/tron/transactions/".length);
+      const id = Number(idPart);
+      if (!Number.isInteger(id) || id <= 0) {
+        sendJson(res, 400, { ok: false, error: "شناسه تراکنش نامعتبر است" });
+        return true;
+      }
+
+      const row = await findTronTransactionById(telegramUser.id, id);
+      if (!row) {
+        sendJson(res, 404, { ok: false, error: "تراکنش یافت نشد" });
+        return true;
+      }
+
+      sendJson(res, 200, {
+        ok: true,
+        transaction: {
+          id: Number(row.id),
+          txHash: row.tx_hash,
+          amountTrx: row.amount_trx,
+          amountIrt: Number(row.amount_irt),
+          trxPriceIrt: Number(row.trx_price_irt),
+          explorerUrl: getTronTxExplorerUrl(row.tx_hash),
+          createdAt: row.date_created
+            ? new Date(row.date_created).toISOString()
+            : null,
+          blockTimestamp: row.block_timestamp
+            ? new Date(row.block_timestamp).toISOString()
+            : null,
+        },
+      });
+      return true;
+    }
+
     if (req.method === "GET" && path === "/api/payments/cards") {
       await loadAuthedUser(req);
       const payload = await getBankCardsCached("active");

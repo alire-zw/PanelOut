@@ -39,6 +39,7 @@ html.app-scroll-locked .app__scroll {
 
 /* Default page shell: same scroll model as admin hub */
 .app__main > .shop,
+.app__main > .faq-page,
 .app__main > .profile,
 .app__main > .support:not(.support--chat),
 .app__main > .admin-page,
@@ -59,7 +60,7 @@ html.app-scroll-locked .app__scroll {
   height: 28px;
   border-radius: 50%;
   border: 2px solid var(--border-subtle);
-  border-top-color: var(--accent);
+  border-top-color: var(--accent-bg);
   animation: spin 0.7s linear infinite;
 }
 

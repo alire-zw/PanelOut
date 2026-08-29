@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           BigInt      @id @default(autoincrement())
+  userId       BigInt      @unique @map("userid")
+  username     String?     @db.VarChar(64)
+  userFullname String      @map("userfullname") @db.VarChar(256)
+  balance                        BigInt      @default(0)
+  panelUnlimitedMaxUsers         Int?        @map("panel_unlimited_max_users")
+  panelUnlimitedAdminUsername    String?     @map("panel_unlimited_admin_username") @db.VarChar(64)
+  panelUnlimitedAdminPassword    String?     @map("panel_unlimited_admin_password") @db.VarChar(128)
+  panelUnlimitedAdminRoleId      Int?        @map("panel_unlimited_admin_role_id")
+  panelUsageAdminPassword        String?     @map("panel_usage_admin_password") @db.VarChar(128)
+  isPremium                      Boolean     @default(false) @map("ispremium")
+  isBanned     Boolean     @default(false) @map("isbanned")
+  dateCreated  DateTime    @default(now()) @map("datecreated")
+  dateUpdated  DateTime    @default(now()) @map("dateupdated")
+  tronWallet           TronWallet?
+  rialDeposits         RialDeposit[]
+  outboundVolumeOrders OutboundVolumeOrder[]
+  subscriptions        UserSubscription[]
+
+  @@index([username])
+  @@index([dateCreated])
+  @@map("users")
+}
+
+model TronWallet {
+  id            BigInt             @id @default(autoincrement())
+  userId        BigInt             @unique @map("userid")
+  address       String             @unique @db.VarChar(64)
+  privateKey    String             @map("private_key") @db.VarChar(128)
+  publicKey     String             @map("public_key") @db.VarChar(256)
+  lastCheckedAt DateTime?          @map("last_checked_at")
+  dateCreated   DateTime           @default(now()) @map("datecreated")
+  dateUpdated   DateTime           @default(now()) @map("dateupdated")
+  user          User               @relation(fields: [userId], references: [userId])
+  transactions  TronTransaction[]
+
+  @@index([address])
+  @@map("tron_wallets")
+}
+
+model TronTransaction {
+  id             BigInt     @id @default(autoincrement())
+  userId         BigInt     @map("userid")
+  walletId       BigInt     @map("walletid")
+  txHash         String     @unique @map("txhash") @db.VarChar(128)
+  fromAddress    String     @map("from_address") @db.VarChar(64)
+  toAddress      String     @map("to_address") @db.VarChar(64)
+  amountSun      BigInt     @map("amount_sun")
+  amountTrx      String     @map("amount_trx") @db.VarChar(32)
+  trxPriceIrt    BigInt     @map("trx_price_irt")
+  amountIrt      BigInt     @map("amount_irt")
+  blockNumber    BigInt?    @map("block_number")
+  blockTimestamp DateTime?  @map("block_timestamp")
+  sweepTxHash    String?    @map("sweep_tx_hash") @db.VarChar(128)
+  sweptAt        DateTime?  @map("swept_at")
+  dateCreated    DateTime   @default(now()) @map("datecreated")
+  wallet         TronWallet @relation(fields: [walletId], references: [id])
+
+  @@index([userId])
+  @@index([walletId])
+  @@index([dateCreated])
+  @@map("tron_transactions")
+}
+
+model PaymentSettings {
+  id                  Int      @id @default(1)
+  tronEnabled         Boolean  @default(true) @map("tron_enabled")
+  rialEnabled         Boolean  @default(false) @map("rial_enabled")
+  masterWalletAddress String?  @map("master_wallet_address") @db.VarChar(64)
+  cardNumber          String?  @map("card_number") @db.VarChar(24)
+  shebaNumber         String?  @map("sheba_number") @db.VarChar(34)
+  updatedBy           BigInt?  @map("updated_by")
+  dateUpdated         DateTime @default(now()) @map("dateupdated")
+
+  @@map("payment_settings")
+}
+
+model PanelSettings {
+  id                Int      @id @default(1)
+  unlimitedCapacity Int      @default(0) @map("unlimited_capacity")
+  unlimitedSold     Int      @default(0) @map("unlimited_sold")
+  updatedBy         BigInt?  @map("updated_by")
+  dateUpdated       DateTime @default(now()) @map("dateupdated")
+
+  @@map("panel_settings")
+}
+
+model SubscriptionPricing {
+  id                        Int      @id @default(1)
+  panelUsagePricePerGb      Int      @default(4000) @map("panel_usage_price_per_gb")
+  outboundPricePerGb        Int      @default(4000) @map("outbound_price_per_gb")
+  panelUnlimitedPricePerSub Int      @default(50000) @map("panel_unlimited_price_per_sub")
+  panelUnlimitedPricePerUser Int     @default(10000) @map("panel_unlimited_price_per_user")
+  updatedBy                 BigInt?  @map("updated_by")
+  dateUpdated               DateTime @default(now()) @map("dateupdated")
+
+  @@map("subscription_pricing")
+}
+
+model RialDeposit {
+  id            BigInt                    @id @default(autoincrement())
+  userId        BigInt                    @map("userid")
+  amountIrt     BigInt                    @map("amount_irt")
+  status        String                    @default("pending") @db.VarChar(16)
+  receiptFileId String                    @map("receipt_file_id") @db.VarChar(256)
+  receiptType   String                    @map("receipt_type") @db.VarChar(16)
+  reviewedBy    BigInt?                   @map("reviewed_by")
+  reviewedAt    DateTime?                 @map("reviewed_at")
+  dateCreated   DateTime                  @default(now()) @map("datecreated")
+  user          User                      @relation(fields: [userId], references: [userId])
+  adminMessages RialDepositAdminMessage[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([dateCreated])
+  @@map("rial_deposits")
+}
+
+model RialDepositAdminMessage {
+  id        BigInt      @id @default(autoincrement())
+  depositId BigInt      @map("deposit_id")
+  adminId   BigInt      @map("admin_id")
+  chatId    BigInt      @map("chat_id")
+  messageId BigInt      @map("message_id")
+  deposit   RialDeposit @relation(fields: [depositId], references: [id], onDelete: Cascade)
+
+  @@unique([depositId, adminId])
+  @@map("rial_deposit_admin_messages")
+}
+
+model Server {
+  id               BigInt   @id @default(autoincrement())
+  serverName       String   @map("server_name") @db.VarChar(255)
+  serverIp         String   @map("server_ip") @db.VarChar(255)
+  serverDomain     String?  @map("server_domain") @db.VarChar(500)
+  port             Int
+  userName         String   @map("user_name") @db.VarChar(255)
+  userPassword     String   @map("user_password") @db.VarChar(255)
+  remark           String?  @db.Text
+  subPublicBaseUrl String?  @map("sub_public_base_url") @db.VarChar(500)
+  isActive                Boolean  @default(true) @map("is_active")
+  salesEnabled            Boolean  @default(true) @map("sales_enabled")
+  renewalEnabled          Boolean  @default(true) @map("renewal_enabled")
+  outboundVolumeEnabled   Boolean  @default(true) @map("outbound_volume_enabled")
+  outboundUsageEnabled    Boolean  @default(true) @map("outbound_usage_enabled")
+  panelVolumeEnabled      Boolean  @default(true) @map("panel_volume_enabled")
+  panelUsageEnabled       Boolean  @default(true) @map("panel_usage_enabled")
+  panelUnlimitedEnabled   Boolean  @default(true) @map("panel_unlimited_enabled")
+  dateCreated             DateTime @default(now()) @map("datecreated")
+  dateUpdated             DateTime @default(now()) @updatedAt @map("dateupdated")
+  subscriptions           UserSubscription[]
+
+  @@index([isActive])
+  @@index([dateCreated])
+  @@map("servers")
+}
+
+model Channel {
+  id              BigInt   @id @default(autoincrement())
+  channelId       BigInt   @unique @map("channel_id")
+  channelName     String   @map("channel_name") @db.VarChar(255)
+  channelUsername String?  @map("channel_username") @db.VarChar(255)
+  buttonLabel     String   @default("تایید عضویت") @map("button_label") @db.VarChar(255)
+  inviteLink      String?  @map("invite_link") @db.VarChar(500)
+  isLocked        Boolean  @default(false) @map("is_locked")
+  memberCount     Int      @default(0) @map("member_count")
+  dateCreated     DateTime @default(now()) @map("datecreated")
+  dateUpdated     DateTime @default(now()) @updatedAt @map("dateupdated")
+
+  @@index([isLocked])
+  @@index([dateCreated])
+  @@map("channels")
+}
+
+model OutboundVolumeOrder {
+  id              BigInt                           @id @default(autoincrement())
+  userId          BigInt                           @map("userid")
+  volumeGb        Int                              @map("volume_gb")
+  pricePerGb      Int                              @map("price_per_gb")
+  discountPercent Int                              @default(0) @map("discount_percent")
+  amountIrt       BigInt                           @map("amount_irt")
+  paymentMethod   String                           @map("payment_method") @db.VarChar(16)
+  status          String                           @default("pending") @db.VarChar(16)
+  receiptFileId   String?                          @map("receipt_file_id") @db.VarChar(256)
+  receiptType     String?                          @map("receipt_type") @db.VarChar(16)
+  reviewedBy      BigInt?                          @map("reviewed_by")
+  reviewedAt      DateTime?                        @map("reviewed_at")
+  fulfilledAt     DateTime?                        @map("fulfilled_at")
+  subscriptionId  BigInt?                          @unique @map("subscription_id")
+  provisionError  String?                          @map("provision_error") @db.Text
+  dateCreated     DateTime                         @default(now()) @map("datecreated")
+  user            User                             @relation(fields: [userId], references: [userId])
+  subscription    UserSubscription?                @relation(fields: [subscriptionId], references: [id])
+  adminMessages   OutboundVolumeOrderAdminMessage[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([dateCreated])
+  @@map("outbound_volume_orders")
+}
+
+model OutboundVolumeOrderAdminMessage {
+  id        BigInt              @id @default(autoincrement())
+  orderId   BigInt              @map("order_id")
+  adminId   BigInt              @map("admin_id")
+  chatId    BigInt              @map("chat_id")
+  messageId BigInt              @map("message_id")
+  order     OutboundVolumeOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, adminId])
+  @@map("outbound_volume_order_admin_messages")
+}
+
+model UserSubscription {
+  id                    BigInt               @id @default(autoincrement())
+  userId                BigInt               @map("userid")
+  serverId              BigInt               @map("server_id")
+  serviceType           String               @map("service_type") @db.VarChar(32)
+  volumeGb              Int                  @map("volume_gb")
+  groupIds              String?              @map("group_ids") @db.VarChar(255)
+  connectionLink        String?              @map("connection_link") @db.Text
+  panelSubId            String?              @map("panel_sub_id") @db.VarChar(128)
+  clientEmail           String               @map("client_email") @db.VarChar(255)
+  remark                String?              @db.VarChar(255)
+  paymentMethod            String               @map("payment_method") @db.VarChar(16)
+  panelStatus              String               @default("active") @map("panel_status") @db.VarChar(16)
+  lastBilledTrafficBytes   BigInt               @default(0) @map("last_billed_traffic_bytes")
+  lastBilledAt             DateTime?            @map("last_billed_at")
+  lowBalanceNotified       Boolean              @default(false) @map("low_balance_notified")
+  lowBalance5GbNotified    Boolean              @default(false) @map("low_balance_5gb_notified")
+  suspendedNotified        Boolean              @default(false) @map("suspended_notified")
+  volumeRemaining15GbNotified Boolean           @default(false) @map("volume_remaining_15gb_notified")
+  volumeRemaining10GbNotified Boolean           @default(false) @map("volume_remaining_10gb_notified")
+  volumeRemaining5GbNotified  Boolean           @default(false) @map("volume_remaining_5gb_notified")
+  dateCreated              DateTime             @default(now()) @map("datecreated")
+  user                     User                 @relation(fields: [userId], references: [userId])
+  server                   Server               @relation(fields: [serverId], references: [id])
+  outboundVolumeOrder      OutboundVolumeOrder?
+  usageCharges             OutboundUsageCharge[]
+  panelUsageCharges        PanelUsageCharge[]
+
+  @@unique([serverId, clientEmail])
+  @@index([userId])
+  @@index([serverId])
+  @@index([dateCreated])
+  @@map("user_subscriptions")
+}
+
+model OutboundUsageCharge {
+  id                BigInt           @id @default(autoincrement())
+  subscriptionId    BigInt           @map("subscription_id")
+  userId            BigInt           @map("userid")
+  trafficBytes      BigInt           @map("traffic_bytes")
+  amountIrt         BigInt           @map("amount_irt")
+  trafficAfterBytes BigInt           @map("traffic_after_bytes")
+  dateCreated       DateTime         @default(now()) @map("datecreated")
+  subscription      UserSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([userId])
+  @@index([dateCreated])
+  @@map("outbound_usage_charges")
+}
+
+model PanelUsageCharge {
+  id                BigInt           @id @default(autoincrement())
+  subscriptionId    BigInt           @map("subscription_id")
+  userId            BigInt           @map("userid")
+  trafficBytes      BigInt           @map("traffic_bytes")
+  amountIrt         BigInt           @map("amount_irt")
+  trafficAfterBytes BigInt           @map("traffic_after_bytes")
+  dateCreated       DateTime         @default(now()) @map("datecreated")
+  subscription      UserSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([userId])
+  @@index([dateCreated])
+  @@map("panel_usage_charges")
+}

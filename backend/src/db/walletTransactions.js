@@ -49,6 +49,30 @@ function emptyTxBase() {
   };
 }
 
+function mapTronTransactionRow(row) {
+  const createdAt = row.date_created ? new Date(row.date_created).toISOString() : null;
+  const verifiedAt = row.block_timestamp
+    ? new Date(row.block_timestamp).toISOString()
+    : createdAt;
+
+  return {
+    ...emptyTxBase(),
+    id: `tron-${row.id}`,
+    title: "شارژ ترون",
+    date: verifiedAt ? formatFaDate(verifiedAt) : "",
+    amount: Number(row.amount_irt) || 0,
+    status: "success",
+    type: "deposit",
+    paymentMethod: "tron",
+    transferDirection: null,
+    orderId: String(row.id),
+    createdAt,
+    verifiedAt,
+    amountTrx: row.amount_trx ? String(row.amount_trx) : null,
+    incomingTxHash: row.tx_hash ? String(row.tx_hash) : null,
+  };
+}
+
 function mapCardChargeRow(row) {
   const createdAt = row.created_at ? new Date(row.created_at).toISOString() : null;
   const reviewedAt = row.reviewed_at ? new Date(row.reviewed_at).toISOString() : null;
@@ -121,7 +145,7 @@ async function buildWalletTransactionsPayload(telegramUserId) {
   const version = await loadVersion(telegramUserId);
   const userId = Number(telegramUserId);
 
-  const [chargeRows, transferRows] = await Promise.all([
+  const [chargeRows, transferRows, tronRows] = await Promise.all([
     sql`
       SELECT c.*,
         card.card_number
@@ -149,11 +173,19 @@ async function buildWalletTransactionsPayload(telegramUserId) {
       ORDER BY t.created_at DESC
       LIMIT 100
     `,
+    sql`
+      SELECT *
+      FROM tron_transactions
+      WHERE telegram_user_id = ${userId}
+      ORDER BY date_created DESC
+      LIMIT 100
+    `,
   ]);
 
   const items = [
     ...chargeRows.map(mapCardChargeRow),
     ...transferRows.map((row) => mapTransferRow(row, userId)),
+    ...tronRows.map(mapTronTransactionRow),
   ].sort((a, b) => {
     const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
     const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;

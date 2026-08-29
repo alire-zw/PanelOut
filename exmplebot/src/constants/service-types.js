@@ -1,0 +1,35 @@
+export const ServiceType = {
+  OUTBOUND_VOLUME: "outbound_volume",
+  OUTBOUND_USAGE: "outbound_usage",
+  PANEL_TRIAL: "panel_trial",
+  PANEL_UNLIMITED: "panel_unlimited",
+  PANEL_USAGE: "panel_usage",
+};
+
+export const PANEL_TRIAL_VOLUME_GB = 5;
+export const PANEL_TRIAL_SERVER_ID = 1;
+export const PANEL_USAGE_SERVER_ID = 1;
+export const PANEL_UNLIMITED_SERVER_ID = 2;
+export const PANEL_TRIAL_ROLE_NAME = "operator";
+export const PANEL_UNLIMITED_ROLE_NAME = PANEL_TRIAL_ROLE_NAME;
+export const PANEL_USAGE_ROLE_NAME = PANEL_TRIAL_ROLE_NAME;
+
+export const OUTBOUND_USAGE_MIN_BALANCE_GB = 50;
+export const OUTBOUND_USAGE_EXISTING_RESERVE_GB = 25;
+export const OUTBOUND_USAGE_LOW_BALANCE_GB = 10;
+export const OUTBOUND_USAGE_CRITICAL_BALANCE_GB = 5;
+
+export const PANEL_USAGE_MIN_BALANCE_GB = OUTBOUND_USAGE_MIN_BALANCE_GB;
+export const PANEL_USAGE_EXISTING_RESERVE_GB = OUTBOUND_USAGE_EXISTING_RESERVE_GB;
+export const PANEL_USAGE_LOW_BALANCE_GB = OUTBOUND_USAGE_LOW_BALANCE_GB;
+export const PANEL_USAGE_CRITICAL_BALANCE_GB = OUTBOUND_USAGE_CRITICAL_BALANCE_GB;
+export { DEFAULT_PANEL_USAGE_PRICE_PER_GB as PANEL_USAGE_PRICE_PER_GB } from "./pricing-defaults.js";
+
+export const OUTBOUND_VOLUME_ALERT_THRESHOLDS_GB = [15, 10, 5];
+export const OUTBOUND_VOLUME_ALERT_RESET_GB = 15;
+
+export const SubscriptionPanelStatus = {
+  ACTIVE: "active",
+  SUSPENDED: "suspended",
+  DEACTIVATED: "deactivated",
+};

@@ -37,10 +37,21 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     headers.set('Authorization', `tma ${initData}`)
   }
 
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    ...rest,
-    headers,
-  })
+  let response: Response
+  try {
+    response = await fetch(`${getApiBaseUrl()}${path}`, {
+      ...rest,
+      headers,
+    })
+  } catch (error) {
+    const raw = error instanceof Error ? error.message : ''
+    const network =
+      /load failed|failed to fetch|networkerror|network request failed/i.test(raw)
+    throw new ApiError(
+      network ? 'ارتباط با سرور برقرار نشد' : raw || 'ارتباط با سرور برقرار نشد',
+      0,
+    )
+  }
 
   let payload: unknown = null
   const contentType = response.headers.get('content-type') || ''

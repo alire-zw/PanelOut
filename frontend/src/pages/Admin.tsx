@@ -2,6 +2,8 @@ import { useEffect, useState, type ComponentType, type CSSProperties } from 'rea
 import { useNavigate } from 'react-router-dom'
 import BankCardIcon from '../components/icons/BankCardIcon'
 import LockIcon from '../components/icons/LockIcon'
+import ServerStack02Icon from '../components/icons/server-stack-02-stroke-rounded'
+import DepositCryptoIcon from '../components/icons/DepositCryptoIcon'
 import PaymentHistoryIcon from '../components/icons/PaymentHistoryIcon'
 import RegularUserIcon from '../components/icons/RegularUserIcon'
 import Ticket02Icon from '../components/icons/ticket-02-stroke-rounded'
@@ -114,6 +116,22 @@ export function AdminPage() {
       path: '/admin/cards',
       tone: 'lime',
       Icon: BankCardIcon,
+    },
+    {
+      id: 'panels',
+      label: 'پنل‌های پاسارگارد',
+      hint: 'افزودن و مدیریت پنل',
+      path: '/admin/panels',
+      tone: 'amber',
+      Icon: ServerStack02Icon,
+    },
+    {
+      id: 'payment-settings',
+      label: 'پرداخت ترون',
+      hint: 'TRX و کیف اصلی',
+      path: '/admin/payment-settings',
+      tone: 'teal',
+      Icon: DepositCryptoIcon,
     },
     {
       id: 'system-channels',

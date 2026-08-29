@@ -104,7 +104,7 @@ export async function updateSupportContactSetting(telegramUsername: string) {
   const data = await apiFetch<{ ok: boolean; telegramUsername: string | null }>(
     '/api/admin/settings/support-contact',
     {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ telegramUsername }),
     },

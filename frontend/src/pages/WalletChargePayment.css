@@ -131,12 +131,69 @@
   background: var(--surface);
 }
 
+.wallet-charge-payment__empty {
+  margin: 24px var(--page-padding-x);
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.wallet-charge-payment__method--skeleton {
+  pointer-events: none;
+  border-color: var(--border-subtle);
+  background: var(--surface);
+}
+
+.wallet-charge-payment__method-skeleton-icon,
+.wallet-charge-payment__method-skeleton-title,
+.wallet-charge-payment__method-skeleton-subtitle {
+  display: block;
+  border-radius: 8px;
+  background: var(--surface-elevated);
+  animation: wallet-charge-payment-pulse 1.2s ease-in-out infinite;
+}
+
+.wallet-charge-payment__method-skeleton-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.wallet-charge-payment__method-skeleton-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wallet-charge-payment__method-skeleton-title {
+  width: 96px;
+  height: 14px;
+}
+
+.wallet-charge-payment__method-skeleton-subtitle {
+  width: 148px;
+  height: 12px;
+}
+
+@keyframes wallet-charge-payment-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
 .wallet-charge-payment__continue {
   width: 100%;
   min-height: 48px;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--accent-bg);
   border-radius: 12px;
-  background: var(--accent);
+  background: var(--accent-bg);
   color: var(--accent-contrast);
   font: inherit;
   font-size: 15px;

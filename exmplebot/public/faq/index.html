@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>سوالات متداول | پنلوت</title>
+  <style>
+    @font-face {
+      font-family: "IRANYekanX";
+      src: url("./fonts/IRANYekanX-Regular.woff") format("woff");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "IRANYekanX";
+      src: url("./fonts/IRANYekanX-Bold.woff") format("woff");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: light;
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --border-strong: #d1d5db;
+      --accent: #111827;
+      --accent-fg: #ffffff;
+      --placeholder: #9ca3af;
+      --focus-border: #9ca3af;
+      --q-hover: #374151;
+      --link-underline: #d1d5db;
+      --radius: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --bg: #0f1115;
+        --surface: #181b22;
+        --text: #f3f4f6;
+        --text-muted: #9ca3af;
+        --border: #2a2f3a;
+        --border-strong: #3f4654;
+        --accent: #f3f4f6;
+        --accent-fg: #111827;
+        --placeholder: #6b7280;
+        --focus-border: #6b7280;
+        --q-hover: #e5e7eb;
+        --link-underline: #3f4654;
+      }
+    }
+
+    html {
+      color-scheme: light dark;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "IRANYekanX", Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      touch-action: manipulation;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 3rem 1.25rem 4rem;
+    }
+
+    header {
+      margin-bottom: 2.5rem;
+    }
+
+    .brand {
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4rem;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .search {
+      margin-bottom: 1.5rem;
+    }
+
+    .search input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.15s;
+      touch-action: manipulation;
+    }
+
+    .search input::placeholder {
+      color: var(--placeholder);
+    }
+
+    .search input:focus {
+      border-color: var(--focus-border);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.4rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+      margin-bottom: 1.75rem;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab {
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      padding: 0.4rem 0.85rem;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      touch-action: manipulation;
+    }
+
+    .tab:hover {
+      color: var(--text);
+      border-color: var(--border-strong);
+    }
+
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-fg);
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .item {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .item:first-child {
+      border-top: 1px solid var(--border);
+    }
+
+    .q {
+      width: 100%;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.1rem 0;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: right;
+      cursor: pointer;
+      line-height: 1.6;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .q:hover {
+      color: var(--q-hover);
+    }
+
+    .icon {
+      flex-shrink: 0;
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-top: 0.15rem;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+
+    .item.open .icon {
+      transform: rotate(180deg);
+    }
+
+    .a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .a-inner {
+      padding: 0 0 1.1rem;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 400;
+      white-space: pre-wrap;
+    }
+
+    .empty,
+    .loading {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 400;
+    }
+
+    footer {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 0.88rem;
+      line-height: 1.9;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--text);
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px solid var(--link-underline);
+      transition: border-color 0.15s;
+    }
+
+    footer a:hover {
+      border-color: var(--text);
+    }
+
+    @media (max-width: 480px) {
+      .wrap {
+        padding: 2rem 1rem 3rem;
+      }
+
+      h1 {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand" id="brand-name">پنلوت</div>
+      <h1>سوالات متداول</h1>
+      <p class="subtitle">پاسخ سوالات پرتکرار درباره سرویس‌ها و ربات</p>
+    </header>
+
+    <div id="loading" class="loading">در حال بارگذاری...</div>
+
+    <div id="content" hidden>
+      <div class="search">
+        <input type="search" id="search" placeholder="جستجو..." autocomplete="off" />
+      </div>
+
+      <div class="tabs" id="tabs"></div>
+      <div class="list" id="list"></div>
+      <div class="empty" id="empty" hidden>نتیجه‌ای یافت نشد.</div>
+
+      <footer>
+        <p>
+          اگر پاسخی پیدا نکردید،
+          <a id="support-link" href="https://t.me/PanelOut_Support" target="_blank" rel="noopener">با پشتیبانی</a>
+          در ارتباط باشید.
+        </p>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    let items = [];
+    let activeCategory = "all";
+
+    const chevron = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>`;
+
+    async function init() {
+      const res = await fetch("/faq/data.json");
+      const data = await res.json();
+
+      document.getElementById("brand-name").textContent = data.brand || "پنلوت";
+
+      if (data.supportUrl) {
+        document.getElementById("support-link").href = data.supportUrl;
+      }
+
+      items = (data.categories || []).flatMap((category) =>
+        (category.questions || []).map((question) => ({
+          categoryId: category.id,
+          categoryTitle: category.title,
+          question: question.question,
+          answer: question.answer,
+        })),
+      );
+
+      renderTabs(data.categories || []);
+      render();
+      document.getElementById("loading").hidden = true;
+      document.getElementById("content").hidden = false;
+    }
+
+    function renderTabs(categories) {
+      const tabs = document.getElementById("tabs");
+      tabs.innerHTML = "";
+
+      const all = document.createElement("button");
+      all.className = "tab active";
+      all.textContent = "همه";
+      all.addEventListener("click", () => selectCategory("all", all));
+      tabs.appendChild(all);
+
+      for (const category of categories) {
+        const btn = document.createElement("button");
+        btn.className = "tab";
+        btn.textContent = category.title;
+        btn.addEventListener("click", () => selectCategory(category.id, btn));
+        tabs.appendChild(btn);
+      }
+    }
+
+    function selectCategory(id, btn) {
+      activeCategory = id;
+      document.querySelectorAll(".tab").forEach((el) => el.classList.remove("active"));
+      btn.classList.add("active");
+      render();
+    }
+
+    function filtered() {
+      const q = document.getElementById("search").value.trim().toLowerCase();
+
+      return items.filter((item) => {
+        if (activeCategory !== "all" && item.categoryId !== activeCategory) {
+          return false;
+        }
+
+        if (!q) return true;
+
+        return (
+          item.question.toLowerCase().includes(q) ||
+          item.answer.toLowerCase().includes(q)
+        );
+      });
+    }
+
+    function render() {
+      const list = document.getElementById("list");
+      const empty = document.getElementById("empty");
+      const rows = filtered();
+
+      list.innerHTML = "";
+
+      if (rows.length === 0) {
+        empty.hidden = false;
+        return;
+      }
+
+      empty.hidden = true;
+
+      for (const item of rows) {
+        const article = document.createElement("article");
+        article.className = "item";
+
+        const btn = document.createElement("button");
+        btn.className = "q";
+        btn.type = "button";
+        btn.innerHTML = `<span>${item.question}</span>${chevron}`;
+
+        const answer = document.createElement("div");
+        answer.className = "a";
+
+        const inner = document.createElement("div");
+        inner.className = "a-inner";
+        inner.textContent = item.answer;
+
+        answer.appendChild(inner);
+        article.appendChild(btn);
+        article.appendChild(answer);
+
+        btn.addEventListener("click", () => {
+          const open = article.classList.contains("open");
+
+          document.querySelectorAll(".item.open").forEach((el) => {
+            el.classList.remove("open");
+            el.querySelector(".a").style.maxHeight = "0";
+          });
+
+          if (!open) {
+            article.classList.add("open");
+            answer.style.maxHeight = `${answer.scrollHeight}px`;
+          }
+        });
+
+        list.appendChild(article);
+      }
+    }
+
+    document.getElementById("search").addEventListener("input", render);
+
+    document.addEventListener(
+      "gesturestart",
+      (event) => {
+        event.preventDefault();
+      },
+      { passive: false },
+    );
+
+    init().catch(() => {
+      document.getElementById("loading").textContent = "خطا در بارگذاری.";
+    });
+  </script>
+</body>
+</html>

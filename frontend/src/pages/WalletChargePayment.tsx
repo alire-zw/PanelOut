@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
 import BankCardIcon from '../components/icons/BankCardIcon'
 import DepositCryptoIcon from '../components/icons/DepositCryptoIcon'
 import { formatAmountFa, isChargeAmountValid } from '../lib/amount'
+import { fetchPaymentMethods } from '../lib/paymentsApi'
 import { isTelegramWebApp } from '../lib/telegram'
 import { useTelegram } from '../hooks/useTelegram'
 import type { ChargePaymentMethod, WalletChargeAmountState } from '../types/wallet'
@@ -27,10 +28,30 @@ const PAYMENT_METHODS: PaymentMethodOption[] = [
   {
     id: 'tron',
     title: 'پرداخت با ترون',
-    subtitle: 'پرداخت از طریق شبکه TRON',
+    subtitle: 'واریز TRX به آدرس اختصاصی',
     Icon: DepositCryptoIcon,
   },
 ]
+
+function PaymentMethodSkeleton() {
+  return (
+    <>
+      {[0, 1].map((index) => (
+        <div
+          key={index}
+          className="wallet-charge-payment__method wallet-charge-payment__method--skeleton"
+          aria-hidden="true"
+        >
+          <span className="wallet-charge-payment__method-skeleton-icon" />
+          <span className="wallet-charge-payment__method-skeleton-text">
+            <span className="wallet-charge-payment__method-skeleton-title" />
+            <span className="wallet-charge-payment__method-skeleton-subtitle" />
+          </span>
+        </div>
+      ))}
+    </>
+  )
+}
 
 export function WalletChargePaymentPage() {
   const navigate = useNavigate()
@@ -39,6 +60,13 @@ export function WalletChargePaymentPage() {
   const chargeState = location.state as WalletChargeAmountState | null
   const amount = chargeState?.amount ?? 0
   const [method, setMethod] = useState<ChargePaymentMethod>('card')
+  const [methodsLoading, setMethodsLoading] = useState(true)
+  const [availableMethods, setAvailableMethods] = useState({ tron: true, card: true })
+
+  const visibleMethods = useMemo(
+    () => PAYMENT_METHODS.filter((option) => availableMethods[option.id]),
+    [availableMethods],
+  )
 
   const handleBack = useCallback(() => {
     navigate('/wallet/charge', { state: { amount }, replace: true })
@@ -48,6 +76,34 @@ export function WalletChargePaymentPage() {
     if (isChargeAmountValid(amount)) return
     navigate('/wallet/charge', { replace: true })
   }, [amount, navigate])
+
+  useEffect(() => {
+    if (!isChargeAmountValid(amount)) return
+    let cancelled = false
+    void fetchPaymentMethods()
+      .then((methods) => {
+        if (cancelled) return
+        setAvailableMethods(methods)
+        if (methods.tron && !methods.card) setMethod('tron')
+        if (methods.card && !methods.tron) setMethod('card')
+      })
+      .catch(() => {
+        if (!cancelled) setAvailableMethods({ tron: false, card: true })
+      })
+      .finally(() => {
+        if (!cancelled) setMethodsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [amount])
+
+  useEffect(() => {
+    if (methodsLoading) return
+    if (visibleMethods.length === 1) {
+      setMethod(visibleMethods[0]!.id)
+    }
+  }, [methodsLoading, visibleMethods])
 
   useEffect(() => {
     if (!isTelegramWebApp()) return
@@ -62,6 +118,15 @@ export function WalletChargePaymentPage() {
   }, [handleBack])
 
   if (!isChargeAmountValid(amount)) return null
+
+  if (!methodsLoading && visibleMethods.length === 0) {
+    return (
+      <div className="wallet-charge-payment">
+        <PageHeader title="انتخاب روش پرداخت" onBack={handleBack} />
+        <p className="wallet-charge-payment__empty">در حال حاضر روش پرداختی فعال نیست.</p>
+      </div>
+    )
+  }
 
   const handleContinue = () => {
     haptic('light')
@@ -106,33 +171,37 @@ export function WalletChargePaymentPage() {
           role="radiogroup"
           aria-label="روش پرداخت"
         >
-          {PAYMENT_METHODS.map((option) => {
-            const isSelected = method === option.id
-            const Icon = option.Icon
-            return (
-              <button
-                key={option.id}
-                type="button"
-                role="radio"
-                aria-checked={isSelected}
-                className={`wallet-charge-payment__method${
-                  isSelected ? ' wallet-charge-payment__method--selected' : ''
-                }`}
-                onClick={() => {
-                  haptic('light')
-                  setMethod(option.id)
-                }}
-              >
-                <span className="wallet-charge-payment__method-icon">
-                  <Icon width={18} height={18} />
-                </span>
-                <span className="wallet-charge-payment__method-text">
-                  <span className="wallet-charge-payment__method-title">{option.title}</span>
-                  <span className="wallet-charge-payment__method-subtitle">{option.subtitle}</span>
-                </span>
-              </button>
-            )
-          })}
+          {methodsLoading ? (
+            <PaymentMethodSkeleton />
+          ) : (
+            visibleMethods.map((option) => {
+              const isSelected = method === option.id
+              const Icon = option.Icon
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  className={`wallet-charge-payment__method${
+                    isSelected ? ' wallet-charge-payment__method--selected' : ''
+                  }`}
+                  onClick={() => {
+                    haptic('light')
+                    setMethod(option.id)
+                  }}
+                >
+                  <span className="wallet-charge-payment__method-icon">
+                    <Icon width={18} height={18} />
+                  </span>
+                  <span className="wallet-charge-payment__method-text">
+                    <span className="wallet-charge-payment__method-title">{option.title}</span>
+                    <span className="wallet-charge-payment__method-subtitle">{option.subtitle}</span>
+                  </span>
+                </button>
+              )
+            })
+          )}
         </div>
       </div>
 
@@ -140,7 +209,12 @@ export function WalletChargePaymentPage() {
         className="wallet-charge-payment__footer shop-rise"
         style={{ '--rise-index': 4 } as CSSProperties}
       >
-        <button type="button" className="wallet-charge-payment__continue" onClick={handleContinue}>
+        <button
+          type="button"
+          className="wallet-charge-payment__continue"
+          onClick={handleContinue}
+          disabled={methodsLoading || visibleMethods.length === 0}
+        >
           ادامه
         </button>
       </footer>

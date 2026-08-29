@@ -188,6 +188,81 @@ export type AdminOverview = {
   openTickets: number
 }
 
+export type PaymentMethods = {
+  tron: boolean
+  card: boolean
+}
+
+export type TronDepositInfo = {
+  address: string
+  trxPriceIrt: number
+  amountToman: number | null
+  suggestedTrx: number | null
+}
+
+export type TronTransactionDetail = {
+  id: number
+  txHash: string
+  amountTrx: string
+  amountIrt: number
+  trxPriceIrt: number
+  explorerUrl: string
+  createdAt: string | null
+  blockTimestamp: string | null
+}
+
+export type PaymentSettings = {
+  tronEnabled: boolean
+  masterWalletAddress: string | null
+  tronConfigured: boolean
+  updatedBy: number | null
+  dateUpdated: string | null
+}
+
+export async function fetchPaymentMethods() {
+  const data = await apiFetch<{ ok: boolean; methods: PaymentMethods }>(
+    '/api/payments/methods',
+  )
+  return data.methods
+}
+
+export async function fetchTronDeposit(amount?: number) {
+  const query = amount && amount > 0 ? `?amount=${encodeURIComponent(String(amount))}` : ''
+  const data = await apiFetch<{ ok: boolean; deposit: TronDepositInfo }>(
+    `/api/payments/tron/deposit${query}`,
+  )
+  return data.deposit
+}
+
+export async function fetchTronTransaction(id: number) {
+  const data = await apiFetch<{ ok: boolean; transaction: TronTransactionDetail }>(
+    `/api/payments/tron/transactions/${id}`,
+  )
+  return data.transaction
+}
+
+export async function fetchAdminPaymentSettings() {
+  const data = await apiFetch<{ ok: boolean; settings: PaymentSettings }>(
+    '/api/admin/payment-settings',
+  )
+  return data.settings
+}
+
+export async function updateAdminPaymentSettings(payload: {
+  tronEnabled?: boolean
+  masterWalletAddress?: string | null
+}) {
+  const data = await apiFetch<{ ok: boolean; settings: PaymentSettings }>(
+    '/api/admin/payment-settings',
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+  )
+  return data.settings
+}
+
 export async function fetchAdminOverview() {
   const data = await apiFetch<{ ok: boolean; overview: AdminOverview }>('/api/admin/overview')
   return data.overview

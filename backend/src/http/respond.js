@@ -33,7 +33,10 @@ export function applyCors(req, res, { origins }) {
     res.setHeader("access-control-allow-credentials", "true");
   }
 
-  res.setHeader("access-control-allow-methods", "GET,POST,PATCH,DELETE,OPTIONS");
+  res.setHeader(
+    "access-control-allow-methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+  );
   res.setHeader(
     "access-control-allow-headers",
     "Content-Type, Authorization, X-Telegram-Init-Data",

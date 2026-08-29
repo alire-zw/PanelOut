@@ -20,12 +20,14 @@ import { defaultAvatar } from '../components/headerConstants'
 import { useEnsureUser } from '../hooks/useEnsureUser'
 import { useTelegram } from '../hooks/useTelegram'
 import { formatUserDisplayName } from '../lib/api'
+import type { UserRole } from '../types/user'
+import { isTelegramWebApp } from '../lib/telegram'
 import {
   PROFILE_CREDITS_EVENT,
   readProfileCreditsShown,
 } from '../lib/profileCredits'
-import { isTelegramWebApp } from '../lib/telegram'
-import type { UserRole } from '../types/user'
+import { useTheme } from '../context/ThemeContext'
+import type { ThemeMode } from '../lib/theme'
 import '../styles/shop-rise.css'
 import './Profile.css'
 
@@ -107,6 +109,7 @@ export function ProfilePage() {
   const navigate = useNavigate()
   const { user } = useEnsureUser()
   const { user: telegramUser, haptic } = useTelegram()
+  const { themeMode, setThemeMode } = useTheme()
   const [isThemeSheetOpen, setIsThemeSheetOpen] = useState(false)
   const [isSocialSheetOpen, setIsSocialSheetOpen] = useState(false)
   const [showCredits, setShowCredits] = useState(() => readProfileCreditsShown())
@@ -359,14 +362,11 @@ export function ProfilePage() {
           { value: 'light', label: 'روشن', icon: <Sun01Icon width={18} height={18} /> },
           { value: 'dark', label: 'تیره', icon: <Moon01Icon width={18} height={18} /> },
         ]}
-        selectedValue="dark"
-        onSelect={() => {
+        selectedValue={themeMode}
+        onSelect={(value) => {
           haptic('light')
-          setNotification({
-            show: true,
-            message: 'تم سایت فقط به‌صورت تیره فعال است',
-            type: 'info',
-          })
+          setThemeMode(value as ThemeMode)
+          setIsThemeSheetOpen(false)
         }}
       />
 

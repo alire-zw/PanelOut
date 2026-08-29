@@ -1,4 +1,5 @@
 import { loadAdminUser } from "../lib/auth.js";
+import { getSql } from "../db/postgres.js";
 import {
   createBankCard,
   updateBankCard,
@@ -42,16 +43,33 @@ import {
   registerAdminSystemChannel,
   setAdminSystemChannelActive,
 } from "../db/systemChannels.js";
-import { getSql } from "../db/postgres.js";
+import {
+  PasarGuardPanelError,
+  createPasarGuardPanel,
+  deletePasarGuardPanel,
+  getPasarGuardPanelDetail,
+  listPasarGuardPanels,
+  reorderPasarGuardPanels,
+  testPasarGuardPanelConnection,
+  togglePasarGuardPanelFlag,
+  updatePasarGuardPanel,
+} from "../db/pasarguardPanels.js";
+import {
+  getPaymentSettings,
+  updatePaymentSettings,
+} from "../db/paymentSettings.js";
+import { config } from "../config.js";
 import { readJsonBody } from "../http/body.js";
 import { sendJson } from "../http/respond.js";
 import { writeAdminAudit } from "../lib/audit.js";
 import { attachSignedReceiptUrl } from "../lib/signedUploads.js";
 import { log } from "../lib/logger.js";
 
-function sendRouteError(res, error) {
+function sendRouteError(res, error, req, path) {
   const status = error.status || 500;
+  const where = req && path ? `${req.method} ${path}  ` : "";
   if (status === 401 || status === 403) {
+    log.warn("api", `${where}${status === 403 ? error.message || "Forbidden" : "Unauthorized"}`);
     sendJson(res, status === 403 ? 403 : 401, {
       ok: false,
       error: status === 403 ? error.message || "Forbidden" : "Unauthorized",
@@ -59,6 +77,7 @@ function sendRouteError(res, error) {
     return;
   }
   if (status === 429) {
+    log.warn("api", `${where}Too many requests`);
     sendJson(
       res,
       429,
@@ -67,10 +86,13 @@ function sendRouteError(res, error) {
     );
     return;
   }
-  if (status >= 500) log.error("api", error);
-  else log.warn("api", error.message || "request failed");
+  if (status >= 500) log.error("api", `${where}${error.stack || error.message || error}`);
+  else log.warn("api", `${where}${error.message || "request failed"}`);
   const payload = { ok: false, error: error.message || "Request failed" };
   if (error.name === "AdminSystemChannelError" && error.code) {
+    payload.code = error.code;
+  }
+  if (error.name === "PasarGuardPanelError" && error.code) {
     payload.code = error.code;
   }
   sendJson(res, status, payload);
@@ -104,6 +126,48 @@ export async function handleAdminRoutes(req, res, path) {
           pendingCharges: Number(pendingCharges[0]?.count ?? 0),
           activeCards: Number(activeCards[0]?.count ?? 0),
           openTickets,
+        },
+      });
+      return true;
+    }
+
+    if (req.method === "GET" && path === "/api/admin/payment-settings") {
+      await loadAdminUser(req);
+      const settings = await getPaymentSettings();
+      sendJson(res, 200, {
+        ok: true,
+        settings: {
+          ...settings,
+          tronConfigured: config.tronConfigured,
+        },
+      });
+      return true;
+    }
+
+    if (req.method === "PATCH" && path === "/api/admin/payment-settings") {
+      const { user, telegramUser } = await loadAdminUser(req, { write: true });
+      const body = await readJsonBody(req);
+      const settings = await updatePaymentSettings(telegramUser.id, {
+        tronEnabled: body.tronEnabled,
+        masterWalletAddress: body.masterWalletAddress,
+      });
+      await writeAdminAudit({
+        req,
+        actor: user,
+        action: "payment_settings.update",
+        targetType: "payment_settings",
+        targetId: "1",
+        meta: {
+          tronEnabled: settings.tronEnabled,
+          hasMasterWallet: Boolean(settings.masterWalletAddress),
+        },
+      });
+      log.event("api", `PATCH /api/admin/payment-settings tg:${telegramUser.id}`);
+      sendJson(res, 200, {
+        ok: true,
+        settings: {
+          ...settings,
+          tronConfigured: config.tronConfigured,
         },
       });
       return true;
@@ -389,7 +453,10 @@ export async function handleAdminRoutes(req, res, path) {
       return true;
     }
 
-    if (req.method === "PUT" && path === "/api/admin/settings/support-contact") {
+    if (
+      (req.method === "PUT" || req.method === "PATCH") &&
+      path === "/api/admin/settings/support-contact"
+    ) {
       const { telegramUser, user } = await loadAdminUser(req, { write: true });
       const body = await readJsonBody(req);
       const telegramUsername = await setSupportTelegramUsername(
@@ -519,9 +586,149 @@ export async function handleAdminRoutes(req, res, path) {
       return true;
     }
 
+    if (req.method === "GET" && path === "/api/admin/panels") {
+      await loadAdminUser(req);
+      const url = new URL(req.url || "/", "http://localhost");
+      const withConnection = url.searchParams.get("connection") === "1";
+      const withStats = url.searchParams.get("stats") === "1";
+      const payload = await listPasarGuardPanels({ withConnection, withStats });
+      sendJson(res, 200, { ok: true, ...payload });
+      return true;
+    }
+
+    if (
+      (req.method === "PUT" || req.method === "PATCH") &&
+      path === "/api/admin/panels/reorder"
+    ) {
+      const { telegramUser, user } = await loadAdminUser(req, { write: true });
+      const body = await readJsonBody(req);
+      const payload = await reorderPasarGuardPanels(body.order);
+      await writeAdminAudit({
+        req,
+        actor: user,
+        action: "panel.reorder",
+        targetType: "pasarguard_panel",
+        targetId: "bulk",
+        meta: { count: body.order?.length ?? 0 },
+      });
+      log.event("api", `PUT /api/admin/panels/reorder by:${telegramUser.id}`);
+      sendJson(res, 200, { ok: true, ...payload });
+      return true;
+    }
+
+    const panelDetailMatch = path.match(/^\/api\/admin\/panels\/(\d+)$/);
+    if (req.method === "GET" && panelDetailMatch) {
+      await loadAdminUser(req);
+      const panelId = parseId(panelDetailMatch[1]);
+      if (!panelId) {
+        sendJson(res, 400, { ok: false, error: "شناسه پنل نامعتبر است" });
+        return true;
+      }
+      const payload = await getPasarGuardPanelDetail(panelId);
+      sendJson(res, 200, { ok: true, ...payload });
+      return true;
+    }
+
+    if (req.method === "POST" && path === "/api/admin/panels") {
+      const { telegramUser, user } = await loadAdminUser(req, { write: true });
+      const body = await readJsonBody(req);
+      const panel = await createPasarGuardPanel(body);
+      await writeAdminAudit({
+        req,
+        actor: user,
+        action: "panel.create",
+        targetType: "pasarguard_panel",
+        targetId: panel.id,
+        meta: { name: panel.name },
+      });
+      log.event("api", `POST /api/admin/panels by:${telegramUser.id}`);
+      sendJson(res, 201, { ok: true, panel });
+      return true;
+    }
+
+    if (req.method === "PATCH" && panelDetailMatch) {
+      const { telegramUser, user } = await loadAdminUser(req, { write: true });
+      const panelId = parseId(panelDetailMatch[1]);
+      if (!panelId) {
+        sendJson(res, 400, { ok: false, error: "شناسه پنل نامعتبر است" });
+        return true;
+      }
+      const body = await readJsonBody(req);
+      const panel = await updatePasarGuardPanel(panelId, body);
+      await writeAdminAudit({
+        req,
+        actor: user,
+        action: "panel.update",
+        targetType: "pasarguard_panel",
+        targetId: panel.id,
+      });
+      log.event("api", `PATCH /api/admin/panels/${panelId} by:${telegramUser.id}`);
+      sendJson(res, 200, { ok: true, panel });
+      return true;
+    }
+
+    if (req.method === "DELETE" && panelDetailMatch) {
+      const { telegramUser, user } = await loadAdminUser(req, { write: true });
+      const panelId = parseId(panelDetailMatch[1]);
+      if (!panelId) {
+        sendJson(res, 400, { ok: false, error: "شناسه پنل نامعتبر است" });
+        return true;
+      }
+      const result = await deletePasarGuardPanel(panelId);
+      await writeAdminAudit({
+        req,
+        actor: user,
+        action: "panel.delete",
+        targetType: "pasarguard_panel",
+        targetId: String(panelId),
+      });
+      log.event("api", `DELETE /api/admin/panels/${panelId} by:${telegramUser.id}`);
+      sendJson(res, 200, { ok: true, ...result });
+      return true;
+    }
+
+    const panelTestMatch = path.match(/^\/api\/admin\/panels\/(\d+)\/test$/);
+    if (req.method === "POST" && panelTestMatch) {
+      await loadAdminUser(req);
+      const panelId = parseId(panelTestMatch[1]);
+      if (!panelId) {
+        sendJson(res, 400, { ok: false, error: "شناسه پنل نامعتبر است" });
+        return true;
+      }
+      const connection = await testPasarGuardPanelConnection(panelId);
+      sendJson(res, 200, { ok: true, connection });
+      return true;
+    }
+
+    const panelToggleMatch = path.match(/^\/api\/admin\/panels\/(\d+)\/toggle\/([^/]+)$/);
+    if (req.method === "POST" && panelToggleMatch) {
+      const { telegramUser, user } = await loadAdminUser(req, { write: true });
+      const panelId = parseId(panelToggleMatch[1]);
+      const kind = decodeURIComponent(panelToggleMatch[2]);
+      if (!panelId) {
+        sendJson(res, 400, { ok: false, error: "شناسه پنل نامعتبر است" });
+        return true;
+      }
+      const panel = await togglePasarGuardPanelFlag(panelId, kind);
+      await writeAdminAudit({
+        req,
+        actor: user,
+        action: "panel.toggle",
+        targetType: "pasarguard_panel",
+        targetId: panel.id,
+        meta: { kind },
+      });
+      log.event(
+        "api",
+        `POST /api/admin/panels/${panelId}/toggle/${kind} by:${telegramUser.id}`,
+      );
+      sendJson(res, 200, { ok: true, panel });
+      return true;
+    }
+
     return false;
   } catch (error) {
-    sendRouteError(res, error);
+    sendRouteError(res, error, req, path);
     return true;
   }
 }

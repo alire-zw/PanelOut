@@ -304,6 +304,8 @@ export function WalletPage() {
     [haptic, navigate],
   )
 
+  const showTransactionsSkeleton = !hasFetchedTransactions && !transactionsError
+
   return (
     <div className="wallet">
       <Notification
@@ -399,6 +401,23 @@ export function WalletPage() {
                 </button>
               }
             />
+          ) : showTransactionsSkeleton ? (
+            [0, 1, 2, 3].map((index) => (
+              <div
+                key={index}
+                className="wallet__transaction wallet__transaction--skeleton shop-rise"
+                style={{ '--rise-index': 4 + index } as CSSProperties}
+              >
+                <div className="wallet__transaction-start">
+                  <span className="wallet__transaction-skeleton-icon" />
+                  <div className="wallet__transaction-info">
+                    <span className="wallet__transaction-skeleton-title" />
+                    <span className="wallet__transaction-skeleton-date" />
+                  </div>
+                </div>
+                <span className="wallet__transaction-skeleton-amount" />
+              </div>
+            ))
           ) : hasFetchedTransactions && transactions.length === 0 ? (
             <EmptyState
               className="shop-rise"

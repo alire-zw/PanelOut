@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fa" dir="rtl" data-theme="dark" class="dark">
+<html lang="fa" dir="rtl">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -7,9 +7,29 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#0a0a0b" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0c0c0e" />
     <title>PanelOut</title>
+    <script>
+      ;(function () {
+        try {
+          var mode = localStorage.getItem('panelout.themeMode') || 'dark'
+          var scheme =
+            mode === 'light'
+              ? 'light'
+              : mode === 'dark'
+                ? 'dark'
+                : window.matchMedia('(prefers-color-scheme: light)').matches
+                  ? 'light'
+                  : 'dark'
+          document.documentElement.dataset.theme = scheme
+          document.documentElement.classList.toggle('dark', scheme === 'dark')
+          document.documentElement.classList.toggle('light', scheme === 'light')
+          var meta = document.querySelector('meta[name="theme-color"]')
+          if (meta) meta.setAttribute('content', scheme === 'light' ? '#f1f5e8' : '#0c0c0e')
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

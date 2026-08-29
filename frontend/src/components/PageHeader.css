@@ -10,7 +10,7 @@
 
 @supports not (background: color-mix(in srgb, var(--bg) 80%, transparent 20%)) {
   .page-header {
-    background: rgba(10, 10, 11, 0.8);
+    background: var(--surface);
   }
 }
 
@@ -85,20 +85,14 @@
   justify-content: center;
   min-height: 32px;
   padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--accent, #ffb922) 35%, var(--border-subtle));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border-subtle));
   border-radius: 8px;
-  background: color-mix(in srgb, var(--accent, #ffb922) 14%, var(--surface));
-  color: var(--kyc-accent-text, var(--accent, #d97706));
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  color: color-mix(in srgb, var(--accent) 88%, var(--text));
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
   line-height: 1;
-}
-
-[data-theme='dark'] .page-header__step {
-  color: var(--accent, #ffb922);
-  background: color-mix(in srgb, var(--accent, #ffb922) 16%, var(--surface));
-  border-color: color-mix(in srgb, var(--accent, #ffb922) 40%, var(--border-subtle));
 }
 
 .page-header__action {
@@ -125,7 +119,7 @@
 }
 
 .page-header__action--accent {
-  background: var(--accent);
+  background: var(--accent-bg);
   color: var(--accent-contrast);
 }
 

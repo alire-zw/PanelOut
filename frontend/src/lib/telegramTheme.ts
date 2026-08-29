@@ -1,14 +1,21 @@
 type ColorScheme = 'light' | 'dark'
 
-/**
- * Must match `--hub-chrome` in Admin.css.
- * Lime-tinted dark so Telegram header + admin glow share the site accent.
- */
-const ADMIN_CHROME_DARK = '#0c1006'
-const ADMIN_CHROME_LIGHT = '#f4ffe6'
-
 function readAppBackground(): string {
-  return getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0a0a0b'
+  return getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0c0c0e'
+}
+
+function readAdminChrome(): string {
+  return (
+    getComputedStyle(document.documentElement).getPropertyValue('--hub-chrome').trim() ||
+    '#0c1006'
+  )
+}
+
+function readChromeBottom(): string {
+  return (
+    getComputedStyle(document.documentElement).getPropertyValue('--chrome-bottom').trim() ||
+    '#000000'
+  )
 }
 
 function updateMetaThemeColor(color: string) {
@@ -23,18 +30,19 @@ function safeCall(fn: () => void) {
   }
 }
 
-function applyTelegramChrome(color: string, scheme: ColorScheme) {
+function applyTelegramChrome(color: string, _scheme?: ColorScheme) {
   const tg = window.Telegram?.WebApp
   if (!tg) return
   safeCall(() => tg.setHeaderColor(color))
   safeCall(() => tg.setBackgroundColor(color))
-  const bottomBar = scheme === 'light' ? '#ffffff' : '#000000'
-  safeCall(() => tg.setBottomBarColor?.(bottomBar))
+  safeCall(() => tg.setBottomBarColor?.(readChromeBottom()))
 }
 
 export function applyAppTheme(colorScheme: ColorScheme) {
   document.documentElement.dataset.theme = colorScheme
   document.documentElement.classList.toggle('dark', colorScheme === 'dark')
+  document.documentElement.classList.toggle('light', colorScheme === 'light')
+  document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', colorScheme)
   syncTelegramChromeForPath(window.location.pathname)
 }
 
@@ -42,10 +50,10 @@ export function applyAppTheme(colorScheme: ColorScheme) {
 export function syncTelegramChromeForPath(pathname: string) {
   const scheme =
     (document.documentElement.dataset.theme as ColorScheme | undefined) ?? 'dark'
-  const isAdmin = pathname === '/admin' || pathname.startsWith('/admin/')
+  const isAdminHub = pathname === '/admin'
 
-  if (isAdmin) {
-    const chrome = scheme === 'light' ? ADMIN_CHROME_LIGHT : ADMIN_CHROME_DARK
+  if (isAdminHub) {
+    const chrome = readAdminChrome()
     updateMetaThemeColor(chrome)
     applyTelegramChrome(chrome, scheme)
     return

@@ -1,7 +1,6 @@
 import type { TelegramState, TelegramWebApp } from './types'
+import { bootstrapTheme } from '../lib/theme'
 import { syncTelegramChromeForPath } from '../lib/telegramTheme'
-
-const CHROME = '#0a0a0b'
 
 function safeCall(fn: () => void) {
   try {
@@ -12,9 +11,7 @@ function safeCall(fn: () => void) {
 }
 
 export function applyDocumentTheme() {
-  document.documentElement.dataset.theme = 'dark'
-  document.documentElement.classList.add('dark')
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', CHROME)
+  bootstrapTheme()
 }
 
 /** Keep pull-down inside the Mini App (same behavior as admin scroll pages). */
@@ -28,23 +25,27 @@ export function getTelegramState(): TelegramState {
   const webApp = window.Telegram?.WebApp ?? null
   const hasInitData = Boolean(webApp?.initData)
   const user = webApp?.initDataUnsafe?.user ?? null
+  const colorScheme =
+    webApp?.colorScheme === 'light' || webApp?.colorScheme === 'dark'
+      ? webApp.colorScheme
+      : 'dark'
 
   return {
     isTelegram: Boolean(webApp && (hasInitData || user)),
     user,
-    colorScheme: 'dark',
+    colorScheme,
     webApp,
   }
 }
 
 export function syncTelegramTheme(_webApp?: TelegramWebApp) {
-  applyDocumentTheme()
+  bootstrapTheme()
   syncTelegramChromeForPath(window.location.pathname)
 }
 
 export function initTelegram(): TelegramState {
   const state = getTelegramState()
-  applyDocumentTheme()
+  bootstrapTheme()
 
   const webApp = state.webApp
   if (!webApp) {

@@ -17,11 +17,11 @@
   margin-bottom: 0;
   padding: 16px;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border-subtle));
+  border: 1px solid color-mix(in srgb, var(--accent-bg) 26%, var(--border-soft));
   background:
     linear-gradient(
       145deg,
-      color-mix(in srgb, var(--accent) 14%, var(--surface)) 0%,
+      color-mix(in srgb, var(--accent-bg) 18%, var(--surface)) 0%,
       var(--surface) 52%,
       color-mix(in srgb, var(--shop-sky) 8%, var(--surface)) 100%
     );
@@ -56,7 +56,7 @@
   padding: 0 16px;
   border: none;
   border-radius: 10px;
-  background: var(--accent);
+  background: var(--accent-bg);
   color: var(--accent-contrast);
   font: inherit;
   font-size: 13px;

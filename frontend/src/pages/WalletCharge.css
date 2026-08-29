@@ -82,9 +82,9 @@
 .wallet-charge__continue {
   width: 100%;
   min-height: 48px;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--accent-bg);
   border-radius: 12px;
-  background: var(--accent);
+  background: var(--accent-bg);
   color: var(--accent-contrast);
   font: inherit;
   font-size: 15px;

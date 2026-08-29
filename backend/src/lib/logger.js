@@ -81,12 +81,33 @@ export const log = {
     out("");
   },
 
+  /** Low-noise runtime detail */
+  debug(action, detail) {
+    const t = `${c.gray}${time()}${c.reset}`;
+    const a = `${c.gray}${pad(action, 8)}${c.reset}`;
+    const d = detail ? `${c.dim}${text(detail)}${c.reset}` : "";
+    out(`  ${t}  ${a}${d ? `  ${d}` : ""}`);
+  },
+
+  /** Informational runtime line */
+  info(action, detail) {
+    this.event(action, detail);
+  },
+
   /** Runtime one-liner */
   event(action, detail) {
     const t = `${c.gray}${time()}${c.reset}`;
     const a = `${c.cyan}${pad(action, 8)}${c.reset}`;
     const d = detail ? `${c.dim}${text(detail)}${c.reset}` : "";
     out(`  ${t}  ${a}${d ? `  ${d}` : ""}`);
+  },
+
+  /** HTTP access line: METHOD /path  status  12ms */
+  http(method, path, status, ms) {
+    const line = `${method} ${path}  ${status}  ${ms}ms`;
+    if (status >= 500) this.error("http", line);
+    else if (status >= 400) this.warn("http", line);
+    else this.event("http", line);
   },
 
   warn(action, detail) {

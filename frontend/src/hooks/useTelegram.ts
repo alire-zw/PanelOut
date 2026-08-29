@@ -5,6 +5,7 @@ import {
   applyDocumentTheme,
   disableTelegramClosingSwipes,
 } from '../telegram/init'
+import { refreshAutoTheme } from '../lib/theme'
 import { syncTelegramChromeForPath } from '../lib/telegramTheme'
 import type { TelegramHapticFeedback, TelegramState } from '../telegram/types'
 
@@ -26,8 +27,7 @@ export function useTelegram(): TelegramHook {
     const sync = () => {
       const next = getTelegramState()
       if (next.webApp) {
-        // Theme tokens only — route chrome is applied from App via pathname.
-        applyDocumentTheme()
+        refreshAutoTheme()
         disableTelegramClosingSwipes(next.webApp)
         syncTelegramChromeForPath(window.location.pathname)
       } else {

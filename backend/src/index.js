@@ -10,6 +10,12 @@ import {
 } from "./db/postgres.js";
 import { ensureSchema } from "./db/schema.js";
 import { redis, pingRedis, closeRedis } from "./db/redis.js";
+import { startShopActivityJob, stopShopActivityJob } from "./jobs/shopActivity.job.js";
+import {
+  startDepositMonitorJob,
+  stopDepositMonitorJob,
+} from "./jobs/depositMonitor.job.js";
+import { startWalletSweepJob, stopWalletSweepJob } from "./jobs/walletSweep.job.js";
 import { log } from "./lib/logger.js";
 
 async function bootstrap() {
@@ -28,12 +34,21 @@ async function bootstrap() {
 
   await ensureSchema();
 
+  startShopActivityJob();
+  startDepositMonitorJob();
+  startWalletSweepJob();
+
   const bot = createBot();
   const webhook = await ensureWebhook(bot, config.webhookUrl);
   const server = createAppServer(bot);
 
   const shutdown = async (signal) => {
     log.warn("shutdown", signal);
+    stopShopActivityJob();
+    stopDepositMonitorJob();
+    stopWalletSweepJob();
+    stopDepositMonitorJob();
+    stopWalletSweepJob();
     await new Promise((resolve) => server.close(resolve));
     await Promise.allSettled([closePostgres(), closeRedis()]);
     log.event("stopped");

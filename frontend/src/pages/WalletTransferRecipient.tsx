@@ -185,12 +185,20 @@ export function WalletTransferRecipientPage() {
 
           <div className="transfer-recipient__list">
             {isSearchMode && isSearching ? (
-              <div
-                className="transfer-recipient__empty transfer-recipient__empty--loading shop-rise"
-                style={{ '--rise-index': 3 } as CSSProperties}
-              >
-                در حال جستجو...
-              </div>
+              [0, 1, 2].map((index) => (
+                <div
+                  key={index}
+                  className="transfer-recipient__item transfer-recipient__item--skeleton shop-rise"
+                  style={{ '--rise-index': 3 + index } as CSSProperties}
+                  aria-hidden="true"
+                >
+                  <span className="transfer-recipient__skeleton-avatar" />
+                  <span className="transfer-recipient__skeleton-info">
+                    <span className="transfer-recipient__skeleton-name" />
+                    <span className="transfer-recipient__skeleton-meta" />
+                  </span>
+                </div>
+              ))
             ) : displayedRecipients.length === 0 ? (
               emptyMessage ? (
                 <EmptyState

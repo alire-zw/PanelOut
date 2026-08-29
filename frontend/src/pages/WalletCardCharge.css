@@ -587,7 +587,7 @@
 .wallet-card-charge__progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: var(--accent);
+  background: var(--accent-bg);
   transition: width 0.15s ease;
 }
 
@@ -603,7 +603,7 @@
   min-height: 48px;
   border: none;
   border-radius: 12px;
-  background: var(--accent);
+  background: var(--accent-bg);
   color: var(--accent-contrast);
   font: inherit;
   font-size: 15px;

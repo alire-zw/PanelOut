@@ -1,4 +1,4 @@
-﻿/* System channels admin page */
+/* System channels admin page */
 
 .admin-sys-ch__intro {
   margin: 0 var(--page-padding-x) 14px;
@@ -164,7 +164,7 @@
   height: 42px;
   border: none;
   border-radius: 10px;
-  background: var(--accent);
+  background: var(--accent-bg);
   color: var(--accent-contrast);
   font: inherit;
   font-size: 14px;

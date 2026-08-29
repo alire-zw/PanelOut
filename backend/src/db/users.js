@@ -42,6 +42,11 @@ export async function ensureUsersTable() {
   `);
 
   await sql.unsafe(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS panel_admin_password TEXT NULL
+  `);
+
+  await sql.unsafe(`
     CREATE INDEX IF NOT EXISTS users_user_name_idx ON users (user_name)
   `);
 }
@@ -226,6 +231,26 @@ export async function updateUserProfile(telegramId, { realName, email } = {}) {
   }
 
   return row;
+}
+
+export async function getUserByTelegramId(telegramId) {
+  const row = await findUserByTelegramId(telegramId);
+  if (!row) return null;
+  return {
+    id: Number(row.id),
+    user_id: Number(row.user_id),
+    balance: Number(row.balance ?? 0),
+    panelAdminPassword: row.panel_admin_password ?? null,
+  };
+}
+
+export async function saveUserPanelAdminPassword(telegramId, password) {
+  const sql = getSql();
+  await sql`
+    UPDATE users
+    SET panel_admin_password = ${password}
+    WHERE user_id = ${telegramId}
+  `;
 }
 
 export function toPublicUser(row) {

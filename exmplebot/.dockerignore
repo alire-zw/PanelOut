@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+.cursor
+exmple
+tools
+terminals
+*.md
+Dockerfile
+docker-compose*.yml
+.dockerignore
+setup.sh

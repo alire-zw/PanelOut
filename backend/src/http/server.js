@@ -8,6 +8,7 @@ import {
   sendUnauthorized,
 } from "./respond.js";
 import { tryServeUpload } from "./uploads.js";
+import { handlePanelRoutes } from "../routes/panel.js";
 import { handleUserRoutes } from "../routes/user.js";
 import { handleAdminRoutes } from "../routes/admin.js";
 import { handlePaymentRoutes } from "../routes/payments.js";
@@ -19,6 +20,15 @@ import { setBotApi } from "../bot/api.js";
 import { applySecurityHeaders } from "../lib/security.js";
 import { log } from "../lib/logger.js";
 
+function attachRequestLog(req, res) {
+  const started = Date.now();
+  res.on("finish", () => {
+    if (req.method === "OPTIONS") return;
+    const path = (req.url || "/").split("?")[0];
+    log.http(req.method || "?", path, res.statusCode, Date.now() - started);
+  });
+}
+
 export function createAppServer(bot) {
   setBotApi(bot.api);
   const handleUpdate = webhookCallback(bot, "http");
@@ -26,6 +36,7 @@ export function createAppServer(bot) {
 
   return createServer(async (req, res) => {
     applySecurityHeaders(res);
+    attachRequestLog(req, res);
 
     const path = (req.url || "/").split("?")[0];
     const isWebhookPath =
@@ -84,6 +95,7 @@ export function createAppServer(bot) {
     if (path.startsWith("/api/")) {
       try {
         if (await handleUserRoutes(req, res, path)) return;
+        if (await handlePanelRoutes(req, res, path)) return;
         if (await handleAdminRoutes(req, res, path)) return;
         if (await handlePaymentRoutes(req, res, path)) return;
         if (await handleWalletRoutes(req, res, path)) return;
@@ -104,7 +116,7 @@ export function createAppServer(bot) {
           sendUnauthorized(res);
           return;
         }
-        log.error("http", error);
+        log.error("http", error.stack || error);
         if (!res.headersSent) {
           sendJson(res, 500, { ok: false, error: "Internal Server Error" });
         }

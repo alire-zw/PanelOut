@@ -55,6 +55,21 @@ export const config = {
   authMaxAgeWriteSec: Number(process.env.AUTH_MAX_AGE_WRITE_SEC || 900),
   authMaxAgeAdminSec: Number(process.env.AUTH_MAX_AGE_ADMIN_SEC || 600),
 
+  tronGridApiKey: process.env.TRONGRID_API_KEY?.trim() || "",
+  swapwalletApiKey: process.env.SWAPWALLET_API_KEY?.trim() || "",
+  tronNetwork: (process.env.TRON_NETWORK || "mainnet").toLowerCase(),
+  tronFullHost:
+    process.env.TRON_FULL_HOST?.trim() ||
+    ((process.env.TRON_NETWORK || "mainnet").toLowerCase() === "shasta"
+      ? "https://api.shasta.trongrid.io"
+      : "https://api.trongrid.io"),
+  depositMonitorCron: process.env.DEPOSIT_MONITOR_CRON || "*/30 * * * * *",
+  walletSweepCron: process.env.WALLET_SWEEP_CRON || "0 */10 * * * *",
+
+  get tronConfigured() {
+    return Boolean(this.tronGridApiKey && this.swapwalletApiKey);
+  },
+
   get corsOrigins() {
     const list = new Set([this.miniAppUrl]);
     if (!this.isProd || process.env.ALLOW_LOCAL_CORS === "1") {

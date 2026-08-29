@@ -307,7 +307,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent-bg);
   animation: support-sync-pulse 1s ease-in-out infinite;
 }
 
@@ -498,7 +498,7 @@
 .support__step-dot.is-current {
   width: 16px;
   border-radius: 999px;
-  background: var(--accent);
+  background: var(--accent-bg);
 }
 
 .support__new-block,
@@ -947,7 +947,7 @@
   height: 44px;
   border: none;
   border-radius: 12px;
-  background: var(--accent);
+  background: var(--accent-bg);
   color: var(--accent-contrast);
   font: inherit;
   font-size: 14px;
@@ -1196,7 +1196,7 @@
   padding: 0 14px;
   border: none;
   border-radius: 12px;
-  background: var(--accent);
+  background: var(--accent-bg);
   color: var(--accent-contrast);
   font: inherit;
   font-size: 13px;

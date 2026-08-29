@@ -463,7 +463,7 @@
 }
 
 .admin-ticket-sheet__input:focus {
-  border-color: var(--accent);
+  border-color: var(--accent-bg);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 

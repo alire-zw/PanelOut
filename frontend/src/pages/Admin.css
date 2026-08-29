@@ -1,4 +1,4 @@
-﻿.admin-page {
+.admin-page {
   margin: -12px -16px 0;
   min-height: 100%;
   overflow-x: hidden;
@@ -25,8 +25,6 @@
   --hub-lime: var(--accent);
   --hub-slate: #94a3b8;
   --hub-money: var(--accent);
-  /* Lime-tinted chrome — same hex as Telegram admin header */
-  --hub-chrome: #0c1006;
 }
 
 .admin-hub.admin-page {
@@ -1437,4 +1435,167 @@
 
 .admin-user-detail__field strong.is-danger {
   color: var(--danger);
+}
+
+.admin-payment-settings__card {
+  margin: 12px var(--page-padding-x);
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+}
+
+.admin-payment-settings__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.admin-payment-settings__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+
+.admin-payment-settings__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.admin-payment-settings__hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.admin-payment-settings__toggle {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-payment-settings__toggle--on {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border-subtle));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  color: var(--accent);
+}
+
+.admin-payment-settings__toggle:disabled {
+  opacity: 0.5;
+}
+
+.admin-payment-settings__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.admin-payment-settings__input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.admin-payment-settings__note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.admin-payment-settings__save {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--accent-bg);
+  background: var(--accent-bg);
+  color: var(--accent-contrast);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin__loading {
+  margin: 24px var(--page-padding-x);
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.admin-payment-settings__card--skeleton {
+  pointer-events: none;
+}
+
+.admin-payment-settings__skeleton-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.admin-payment-settings__skeleton-icon,
+.admin-payment-settings__skeleton-line {
+  display: block;
+  border-radius: 8px;
+  background: var(--surface-elevated);
+  animation: admin-payment-settings-pulse 1.2s ease-in-out infinite;
+}
+
+.admin-payment-settings__skeleton-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.admin-payment-settings__skeleton-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-payment-settings__skeleton-line--title {
+  width: 96px;
+  height: 16px;
+}
+
+.admin-payment-settings__skeleton-line--hint {
+  width: 168px;
+  height: 12px;
+}
+
+.admin-payment-settings__skeleton-line--action {
+  width: 100%;
+  height: 44px;
+  margin-top: 14px;
+  border-radius: 12px;
+}
+
+@keyframes admin-payment-settings-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }

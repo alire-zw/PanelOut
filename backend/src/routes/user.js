@@ -2,6 +2,7 @@ import {
   updateUserProfile,
   toPublicUser,
 } from "../db/users.js";
+import { getShopActivityStats } from "../db/pasarguardPanels.js";
 import { loadAuthedUser } from "../lib/auth.js";
 import { readJsonBody } from "../http/body.js";
 import { sendJson } from "../http/respond.js";
@@ -22,11 +23,24 @@ function sendRouteError(res, error) {
 }
 
 /**
- * User profile routes:
- *   GET   /api/user/me   — current user
- *   PATCH /api/user/me   — update realName / email
+ * User / shop routes:
+ *   GET   /api/user/me         — current user
+ *   PATCH /api/user/me         — update realName / email
+ *   GET   /api/shop/activity   — aggregated live panel stats
  */
 export async function handleUserRoutes(req, res, path) {
+  if (req.method === "GET" && path === "/api/shop/activity") {
+    try {
+      await loadAuthedUser(req);
+      const activity = await getShopActivityStats();
+      sendJson(res, 200, { ok: true, activity });
+      return true;
+    } catch (error) {
+      sendRouteError(res, error);
+      return true;
+    }
+  }
+
   if (req.method === "GET" && path === "/api/user/me") {
     try {
       const { user } = await loadAuthedUser(req);

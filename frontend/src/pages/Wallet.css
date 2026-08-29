@@ -158,8 +158,8 @@
 }
 
 .wallet__action--charge {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-bg);
   color: var(--accent-contrast);
 }
 
@@ -215,7 +215,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent-bg);
   animation: wallet-sync-pulse 1s ease-in-out infinite;
 }
 

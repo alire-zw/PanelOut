@@ -13,6 +13,7 @@ import Wrench01Icon from '../components/icons/wrench-01-stroke-rounded'
 import ZapIcon from '../components/icons/zap-stroke-rounded'
 import { useEnsureUser } from '../hooks/useEnsureUser'
 import { useTelegram } from '../hooks/useTelegram'
+import { fetchShopActivity } from '../lib/shopActivityApi'
 import '../styles/shop-rise.css'
 import './HomePage.css'
 
@@ -97,36 +98,34 @@ const quickActions: QuickAction[] = [
   },
 ]
 
-const activityStats = [
-  {
-    key: 'traffic',
-    target: 195.43,
-    decimals: 2,
-    unit: 'ترابایت',
-    label: 'ترافیک مصرفی',
-  },
-  {
-    key: 'users',
-    target: 11292,
-    decimals: 0,
-    unit: null as string | null,
-    label: 'کاربر فعال',
-  },
-  {
-    key: 'resellers',
-    target: 78,
-    decimals: 0,
-    unit: null as string | null,
-    label: 'نماینده فروش',
-  },
-  {
-    key: 'uptime',
-    target: 487,
-    decimals: 0,
-    unit: 'روز',
-    label: 'آپ‌تایم',
-  },
-]
+const TB = 1024 ** 4
+const GB = 1024 ** 3
+const MB = 1024 ** 2
+
+function trafficStat(bytes: number) {
+  if (bytes >= TB) {
+    return { target: bytes / TB, decimals: 2, unit: 'ترابایت' as const }
+  }
+  if (bytes >= GB) {
+    return { target: bytes / GB, decimals: 2, unit: 'گیگابایت' as const }
+  }
+  return { target: bytes / MB, decimals: bytes >= MB ? 0 : 1, unit: 'مگابایت' as const }
+}
+
+function uptimeStat(seconds: number | null) {
+  if (!seconds || seconds <= 0) {
+    return { target: 0, decimals: 0, unit: 'روز' as const }
+  }
+  const days = seconds / 86400
+  if (days >= 1) {
+    return { target: Math.floor(days), decimals: 0, unit: 'روز' as const }
+  }
+  const hours = seconds / 3600
+  if (hours >= 1) {
+    return { target: Math.floor(hours), decimals: 0, unit: 'ساعت' as const }
+  }
+  return { target: Math.max(1, Math.floor(seconds / 60)), decimals: 0, unit: 'دقیقه' as const }
+}
 
 const perks = [
   {
@@ -186,10 +185,70 @@ export function HomePage() {
     type: NotificationType
   }>({ show: false, message: '', type: 'info' })
 
+  const [activity, setActivity] = useState({
+    trafficBytes: 0,
+    totalUsers: 0,
+    resellerCount: 0,
+    uptimeSeconds: null as number | null,
+  })
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchShopActivity()
+      .then((data) => {
+        if (cancelled) return
+        setActivity({
+          trafficBytes: data.trafficBytes,
+          totalUsers: data.totalUsers,
+          resellerCount: data.resellerCount,
+          uptimeSeconds: data.uptimeSeconds,
+        })
+      })
+      .catch(() => {
+        /* keep zeros if panels are unreachable */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const showNotification = (message: string, type: NotificationType = 'info') => {
     haptic('light')
     setNotification({ show: true, message, type })
   }
+
+  const traffic = trafficStat(activity.trafficBytes)
+  const uptime = uptimeStat(activity.uptimeSeconds)
+  const activityStats = [
+    {
+      key: 'traffic',
+      target: traffic.target,
+      decimals: traffic.decimals,
+      unit: traffic.unit,
+      label: 'ترافیک مصرفی',
+    },
+    {
+      key: 'users',
+      target: activity.totalUsers,
+      decimals: 0,
+      unit: null as string | null,
+      label: 'کاربر',
+    },
+    {
+      key: 'resellers',
+      target: activity.resellerCount,
+      decimals: 0,
+      unit: null as string | null,
+      label: 'نماینده فروش',
+    },
+    {
+      key: 'uptime',
+      target: uptime.target,
+      decimals: uptime.decimals,
+      unit: uptime.unit,
+      label: 'آپ‌تایم',
+    },
+  ]
 
   return (
     <div className="shop">
@@ -204,7 +263,10 @@ export function HomePage() {
         <button
           type="button"
           className="shop-hero__cta"
-          onClick={() => showNotification('شروع مراحل دریافت پنل به‌زودی فعال می‌شود')}
+          onClick={() => {
+            haptic('light')
+            navigate('/panel')
+          }}
         >
           شروع مراحل دریافت پنل
         </button>
@@ -243,7 +305,12 @@ export function HomePage() {
                   showNotification('ربات فروش نمایندگی به‌زودی اضافه می‌شود', 'warning')
                   return
                 }
-                showNotification(`${action.label} — فرانت موقت؛ بک‌اند بعدی`)
+                if (action.id === 'panel') {
+                  haptic('light')
+                  navigate('/panel')
+                  return
+                }
+                showNotification(`${action.label} — به‌زودی`)
               }}
             >
               <span className="shop-actions__icon">
@@ -319,7 +386,8 @@ export function HomePage() {
             type="button"
             className="shop-perks__support"
             onClick={() => {
-              showNotification('سوالات متداول به‌زودی اضافه می‌شود')
+              haptic('light')
+              navigate('/faq')
             }}
           >
             <span className="shop-perks__support-icon shop-perks__support-icon--faq">
