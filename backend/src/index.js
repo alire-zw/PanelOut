@@ -28,6 +28,10 @@ import {
   stopDepositMonitorJob,
 } from "./jobs/depositMonitor.job.js";
 import { startWalletSweepJob, stopWalletSweepJob } from "./jobs/walletSweep.job.js";
+import {
+  startDatabaseBackupJob,
+  stopDatabaseBackupJob,
+} from "./jobs/databaseBackup.job.js";
 import { log } from "./lib/logger.js";
 
 async function bootstrap() {
@@ -56,6 +60,7 @@ async function bootstrap() {
   const bot = createBot();
   const webhook = await ensureWebhook(bot, config.webhookUrl);
   const server = createAppServer(bot);
+  startDatabaseBackupJob();
 
   const shutdown = async (signal) => {
     log.warn("shutdown", signal);
@@ -65,6 +70,7 @@ async function bootstrap() {
     stopOutboundVolumeAlertJob();
     stopDepositMonitorJob();
     stopWalletSweepJob();
+    stopDatabaseBackupJob();
     await new Promise((resolve) => server.close(resolve));
     await Promise.allSettled([closePostgres(), closeRedis()]);
     log.event("stopped");

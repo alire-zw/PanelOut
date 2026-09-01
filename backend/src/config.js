@@ -66,6 +66,14 @@ export const config = {
   depositMonitorCron: process.env.DEPOSIT_MONITOR_CRON || "*/30 * * * * *",
   walletSweepCron: process.env.WALLET_SWEEP_CRON || "0 */10 * * * *",
 
+  databaseBackupEnabled: process.env.DATABASE_BACKUP_ENABLED !== "0",
+  databaseBackupIntervalMs: Number(
+    process.env.DATABASE_BACKUP_INTERVAL_MS || 60 * 60 * 1000,
+  ),
+  pgDumpPath: process.env.PG_DUMP_PATH?.trim() || "pg_dump",
+  databaseBackupDockerContainer:
+    process.env.DATABASE_BACKUP_DOCKER_CONTAINER?.trim() || "panelout-postgres",
+
   get tronConfigured() {
     return Boolean(this.tronGridApiKey && this.swapwalletApiKey);
   },
