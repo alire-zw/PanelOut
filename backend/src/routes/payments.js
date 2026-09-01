@@ -26,6 +26,7 @@ import {
 } from "../services/pricing/swapwallet.service.js";
 import { getOrCreateTronWallet } from "../services/tron/tron-wallet.service.js";
 import { getTronTxExplorerUrl } from "../services/tron/tron-explorer.js";
+import { notifyCardChargeCreated } from "../services/cardChargeReport.service.js";
 
 function sendRouteError(res, error) {
   const status = error.status || 500;
@@ -191,6 +192,7 @@ export async function handlePaymentRoutes(req, res, path) {
       });
       await invalidateWalletTransactionsCache(telegramUser.id);
       await invalidateAdminChargesCache();
+      void notifyCardChargeCreated(charge);
       log.event(
         "api",
         `POST /api/payments/card-charge #${charge.id} tg:${telegramUser.id}`,

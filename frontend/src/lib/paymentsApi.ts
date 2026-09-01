@@ -181,11 +181,24 @@ export function formatShebaDisplay(sheba: string) {
   return sheba.replace(/(.{4})/g, '$1 ').trim()
 }
 
+export type AdminOverviewToday = {
+  usageTrafficBytes: string
+  usageAmountIrt: number
+  usageUsersCount: number
+  usageBillingCount: number
+  chargesAmountIrt: number
+  chargesCount: number
+  chargesUsersCount: number
+  cardChargesAmountIrt: number
+  tronChargesAmountIrt: number
+}
+
 export type AdminOverview = {
   usersCount: number
   pendingCharges: number
   activeCards: number
   openTickets: number
+  today: AdminOverviewToday
 }
 
 export type PaymentMethods = {
@@ -268,6 +281,88 @@ export async function fetchAdminOverview() {
   return data.overview
 }
 
+export type UsageInvoiceRange = 'today' | 'week' | 'month' | 'all'
+
+export type AdminUsageInvoiceSummary = {
+  invoiceCount: number
+  usersCount: number
+  amountIrt: number
+  trafficBytes: string
+}
+
+export type AdminUsageInvoiceServiceRow = {
+  serviceType: string
+  invoiceCount: number
+  amountIrt: number
+  trafficBytes: string
+}
+
+export type AdminUsageInvoiceUserRow = {
+  telegramUserId: number
+  displayName: string
+  username: string | null
+  invoiceCount: number
+  amountIrt: number
+  trafficBytes: string
+}
+
+export type AdminUsageInvoicePanelRow = {
+  clientUsername: string
+  serviceType: string
+  telegramUserId: number
+  ownerDisplayName: string
+  invoiceCount: number
+  amountIrt: number
+  trafficBytes: string
+}
+
+export type AdminUsageInvoiceItem = {
+  id: number
+  source?: 'panel' | 'outbound'
+  subscriptionId: number
+  telegramUserId: number
+  clientUsername: string
+  serviceType: string
+  trafficBytes: string
+  amountIrt: number
+  trafficAfterBytes: string
+  walletSource: 'main' | 'panel'
+  createdAt: string | null
+  userDisplayName: string
+  username: string | null
+}
+
+export type AdminUsageInvoicesPayload = {
+  range: UsageInvoiceRange
+  summary: AdminUsageInvoiceSummary
+  byServiceType: AdminUsageInvoiceServiceRow[]
+  topUsers: AdminUsageInvoiceUserRow[]
+  topPanels: AdminUsageInvoicePanelRow[]
+  items: AdminUsageInvoiceItem[]
+  pagination: {
+    limit: number
+    offset: number
+    total: number
+    hasMore: boolean
+  }
+}
+
+export async function fetchAdminUsageInvoices(params: {
+  range?: UsageInvoiceRange
+  limit?: number
+  offset?: number
+} = {}) {
+  const search = new URLSearchParams()
+  if (params.range) search.set('range', params.range)
+  if (params.limit != null) search.set('limit', String(params.limit))
+  if (params.offset != null) search.set('offset', String(params.offset))
+  const query = search.toString()
+  const data = await apiFetch<{ ok: boolean } & AdminUsageInvoicesPayload>(
+    `/api/admin/usage-invoices${query ? `?${query}` : ''}`,
+  )
+  return data
+}
+
 export async function fetchAdminUsers(query = '') {
   const q = query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ''
   const data = await apiFetch<{ ok: boolean; users: import('../types/user').AppUser[] }>(
@@ -276,9 +371,168 @@ export async function fetchAdminUsers(query = '') {
   return data.users
 }
 
+export type SubscriptionPricing = {
+  panelUsagePricePerGb: number
+  outboundPricePerGb: number
+  panelUnlimitedPricePerSub: number
+  panelUnlimitedPricePerUser: number
+  updatedBy: number | null
+  dateUpdated: string | null
+}
+
+export async function fetchAdminPricingSettings() {
+  const data = await apiFetch<{ ok: boolean; pricing: SubscriptionPricing }>(
+    '/api/admin/pricing-settings',
+  )
+  return data.pricing
+}
+
+export async function updateAdminPricingSettings(
+  payload: Partial<{
+    panelUsagePricePerGb: number
+    outboundPricePerGb: number
+    panelUnlimitedPricePerSub: number
+    panelUnlimitedPricePerUser: number
+  }>,
+) {
+  const data = await apiFetch<{ ok: boolean; pricing: SubscriptionPricing }>(
+    '/api/admin/pricing-settings',
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    },
+  )
+  return data.pricing
+}
+
+export async function fetchShopPricing() {
+  const data = await apiFetch<{ ok: boolean; pricing: SubscriptionPricing }>(
+    '/api/shop/pricing',
+  )
+  return data.pricing
+}
+
 export async function fetchAdminUser(telegramId: number) {
   const data = await apiFetch<{ ok: boolean; user: import('../types/user').AppUser }>(
     `/api/admin/users/${telegramId}`,
   )
   return data.user
+}
+
+export type AdminUserPanel = {
+  id: string
+  panelId: string
+  serviceType: string
+  clientUsername: string
+  adminPassword: string | null
+  panelAdminId: string | null
+  panelUrl: string
+  status: 'active' | 'suspended' | 'deactivated'
+  paymentMethod: string | null
+  walletBalance: number
+  lastBilledTrafficBytes: string
+  prepaidTrafficBytes: string
+  lastBilledAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type AdminUserDetailUser = import('../types/user').AppUser & {
+  panelAdminPassword?: string | null
+}
+
+export type AdminAuditLog = {
+  id: string
+  action: string
+  targetType: string | null
+  targetId: string | null
+  meta: Record<string, unknown> | null
+  ip: string | null
+  createdAt: string
+  actor: {
+    telegramId: number
+    role: string
+    username: string | null
+    displayName: string | null
+  }
+}
+
+export type AdminUserDetail = {
+  user: AdminUserDetailUser
+  panels: AdminUserPanel[]
+  transactions: import('../types/wallet').WalletTransaction[]
+  auditLogs: AdminAuditLog[]
+}
+
+export async function fetchAdminUserDetail(telegramId: number) {
+  const data = await apiFetch<{ ok: boolean } & AdminUserDetail>(
+    `/api/admin/users/${telegramId}/detail`,
+  )
+  return {
+    user: data.user,
+    panels: data.panels,
+    transactions: data.transactions,
+    auditLogs: data.auditLogs,
+  }
+}
+
+export async function patchAdminUserBan(telegramId: number, isBanned: boolean) {
+  const data = await apiFetch<{ ok: boolean; user: import('../types/user').AppUser }>(
+    `/api/admin/users/${telegramId}/ban`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isBanned }),
+    },
+  )
+  return data.user
+}
+
+export async function patchAdminUserBalance(
+  telegramId: number,
+  balanceToman: number,
+  note?: string,
+) {
+  const data = await apiFetch<{
+    ok: boolean
+    user: import('../types/user').AppUser
+    previousBalance: number
+    newBalance: number
+  }>(`/api/admin/users/${telegramId}/balance`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ balanceToman, note: note?.trim() || undefined }),
+  })
+  return data
+}
+
+export async function patchAdminUserPanelStatus(
+  telegramId: number,
+  subscriptionId: string,
+  status: AdminUserPanel['status'],
+) {
+  const data = await apiFetch<{ ok: boolean; panel: AdminUserPanel }>(
+    `/api/admin/users/${telegramId}/panels/${subscriptionId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    },
+  )
+  return data.panel
+}
+
+export async function patchAdminUserRole(telegramId: number, role: import('../types/user').UserRole) {
+  const data = await apiFetch<{
+    ok: boolean
+    user: import('../types/user').AppUser
+    previousRole: import('../types/user').UserRole
+    newRole: import('../types/user').UserRole
+  }>(`/api/admin/users/${telegramId}/role`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role }),
+  })
+  return data
 }

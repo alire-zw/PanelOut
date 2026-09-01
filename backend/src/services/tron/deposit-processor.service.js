@@ -7,6 +7,8 @@ import {
   getTrxPriceIrt,
 } from "../pricing/swapwallet.service.js";
 import { notifyDepositSuccess } from "../depositNotification.service.js";
+import { reactivateSuspendedPanelsAfterWalletCredit } from "../panelUsageBilling.service.js";
+import { reactivateSuspendedOutboundAfterWalletCredit } from "../outboundUsageBilling.service.js";
 import {
   fetchIncomingTransactions,
   parseTrxTransfer,
@@ -81,6 +83,13 @@ export async function processWalletDeposits(wallet) {
       amountIrt: result.amountIrt,
       newBalance: result.newBalance,
       txHash: deposit.txHash,
+    });
+
+    void reactivateSuspendedPanelsAfterWalletCredit(wallet.userId).catch((err) => {
+      log.warn("billing", `reactivate after tron fail — ${err.message || err}`);
+    });
+    void reactivateSuspendedOutboundAfterWalletCredit(wallet.userId).catch((err) => {
+      log.warn("outbound-billing", `reactivate after tron fail — ${err.message || err}`);
     });
 
     await sweepDepositToMaster(wallet, deposit);

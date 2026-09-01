@@ -34,3 +34,6 @@ coverage/
 # Local agent / tooling
 .cursor/
 agent-transcripts/
+
+# User uploads (receipts, etc.)
+backend/uploads/

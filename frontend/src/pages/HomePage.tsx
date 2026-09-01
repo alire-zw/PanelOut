@@ -35,10 +35,15 @@ function formatFaNumber(value: number, decimals: number) {
   })
 }
 
-function useCountUp(target: number, decimals: number, duration = 1400) {
-  const [value, setValue] = useState(() => (prefersReducedMotion() ? target : 0))
+function useCountUp(target: number, decimals: number, enabled: boolean, duration = 1400) {
+  const [value, setValue] = useState(0)
 
   useEffect(() => {
+    if (!enabled) {
+      setValue(0)
+      return
+    }
+
     if (prefersReducedMotion()) {
       setValue(target)
       return
@@ -46,6 +51,7 @@ function useCountUp(target: number, decimals: number, duration = 1400) {
 
     let frame = 0
     const start = performance.now()
+    setValue(0)
 
     const tick = (now: number) => {
       const progress = Math.min(1, (now - start) / duration)
@@ -59,7 +65,7 @@ function useCountUp(target: number, decimals: number, duration = 1400) {
 
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [target, duration])
+  }, [target, decimals, enabled, duration])
 
   return formatFaNumber(value, decimals)
 }
@@ -156,13 +162,15 @@ function ActivityStatItem({
   decimals,
   unit,
   label,
+  ready,
 }: {
   target: number
   decimals: number
   unit: string | null
   label: string
+  ready: boolean
 }) {
-  const display = useCountUp(target, decimals)
+  const display = useCountUp(target, decimals, ready)
 
   return (
     <div className="shop-stats__item">
@@ -176,9 +184,9 @@ function ActivityStatItem({
 }
 
 export function HomePage() {
-  useEnsureUser()
+  const { isReady, haptic } = useTelegram()
+  const { isLoading: userLoading } = useEnsureUser()
   const navigate = useNavigate()
-  const { haptic } = useTelegram()
   const [notification, setNotification] = useState<{
     show: boolean
     message: string
@@ -191,9 +199,14 @@ export function HomePage() {
     resellerCount: 0,
     uptimeSeconds: null as number | null,
   })
+  const [activityReady, setActivityReady] = useState(false)
 
   useEffect(() => {
+    if (!isReady || userLoading) return
+
     let cancelled = false
+    setActivityReady(false)
+
     void fetchShopActivity()
       .then((data) => {
         if (cancelled) return
@@ -203,14 +216,17 @@ export function HomePage() {
           resellerCount: data.resellerCount,
           uptimeSeconds: data.uptimeSeconds,
         })
+        setActivityReady(true)
       })
       .catch(() => {
-        /* keep zeros if panels are unreachable */
+        if (cancelled) return
+        setActivityReady(true)
       })
+
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isReady, userLoading])
 
   const showNotification = (message: string, type: NotificationType = 'info') => {
     haptic('light')
@@ -310,6 +326,11 @@ export function HomePage() {
                   navigate('/panel')
                   return
                 }
+                if (action.id === 'outbound') {
+                  haptic('light')
+                  navigate('/outbound')
+                  return
+                }
                 showNotification(`${action.label} — به‌زودی`)
               }}
             >
@@ -351,6 +372,7 @@ export function HomePage() {
               decimals={stat.decimals}
               unit={stat.unit}
               label={stat.label}
+              ready={activityReady}
             />
           ))}
         </div>

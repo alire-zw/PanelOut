@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { formatPaymentDate } from '../lib/formatDate'
+import { formatFaTraffic } from '../lib/formatTraffic'
 import { lockAppScroll, unlockAppScroll } from '../lib/scrollLock'
 import type { WalletTransaction } from '../types/wallet'
 import './TransactionDetailSheet.css'
@@ -31,6 +32,12 @@ function getPaymentMethodLabel(transaction: WalletTransaction): string {
     if (transaction.transferDirection === 'out') return 'انتقال به کاربر'
     return 'انتقال موجودی'
   }
+  if (transaction.type === 'panel_usage' || transaction.type === 'outbound_usage') {
+    return transaction.walletSource === 'panel' ? 'کیف پول پنل' : 'موجودی کیف پول'
+  }
+  if (transaction.type === 'outbound_volume_purchase') {
+    return 'موجودی کیف پول'
+  }
   if (
     transaction.paymentMethod === 'zibal' &&
     (transaction.walletAmountToman ?? 0) > 0 &&
@@ -57,6 +64,21 @@ function shortenHash(value: string): string {
   return `${value.slice(0, 8)}...${value.slice(-8)}`
 }
 
+function panelServiceTypeLabel(type: WalletTransaction['panelServiceType']): string {
+  if (type === 'outbound_volume') return 'اوتباند حجمی'
+  if (type === 'outbound_usage') return 'اوتباند مصرفی'
+  if (type === 'panel_reseller') return 'ریسلری'
+  if (type === 'panel_usage') return 'مصرفی شخصی'
+  return '—'
+}
+
+function transactionTypeLabel(transaction: WalletTransaction): string {
+  if (transaction.type === 'outbound_usage') return 'فاکتور مصرف اوتباند'
+  if (transaction.type === 'outbound_volume_purchase') return 'خرید اوتباند حجمی'
+  if (transaction.type === 'panel_usage') return 'فاکتور مصرف پنل'
+  return transaction.title
+}
+
 function buildDetailRows(transaction: WalletTransaction): DetailRow[] {
   const rows: DetailRow[] = [
     {
@@ -66,7 +88,7 @@ function buildDetailRows(transaction: WalletTransaction): DetailRow[] {
     },
     {
       label: 'نوع تراکنش',
-      value: transaction.title,
+      value: transactionTypeLabel(transaction),
     },
     {
       label: 'تاریخ ثبت',
@@ -109,7 +131,10 @@ function buildDetailRows(transaction: WalletTransaction): DetailRow[] {
             : 'transaction-detail__value--amount transaction-detail__value--success',
     },
     {
-      label: 'شماره سفارش',
+      label:
+        transaction.type === 'panel_usage' || transaction.type === 'outbound_usage'
+          ? 'شماره فاکتور'
+          : 'شماره سفارش',
       value: transaction.orderId ?? '—',
     },
   )
@@ -141,6 +166,72 @@ function buildDetailRows(transaction: WalletTransaction): DetailRow[] {
         valueClassName: 'transaction-detail__value--amount',
       },
     )
+  }
+
+  if (transaction.type === 'panel_usage' || transaction.type === 'outbound_usage') {
+    if (transaction.chargeCount && transaction.chargeCount > 1) {
+      rows.push({
+        label: 'تعداد دوره',
+        value: `${transaction.chargeCount.toLocaleString('fa-IR')} مورد`,
+      })
+    }
+    if (transaction.panelUsername) {
+      rows.push({
+        label: transaction.type === 'outbound_usage' ? 'سرویس' : 'پنل',
+        value: (
+          <span dir="ltr" style={{ unicodeBidi: 'plaintext' }}>
+            {transaction.panelUsername}
+          </span>
+        ),
+      })
+    }
+    if (transaction.panelServiceType) {
+      rows.push({
+        label: transaction.type === 'outbound_usage' ? 'نوع سرویس' : 'نوع پنل',
+        value: panelServiceTypeLabel(transaction.panelServiceType),
+      })
+    }
+    if (transaction.trafficGb) {
+      rows.push({
+        label: 'حجم مصرف',
+        value: formatFaTraffic(transaction.trafficGb, 'long'),
+      })
+    }
+    if (
+      transaction.dateFrom &&
+      transaction.dateTo &&
+      transaction.dateFrom !== transaction.dateTo
+    ) {
+      rows.push(
+        {
+          label: 'از',
+          value: formatPaymentDate(transaction.dateFrom),
+        },
+        {
+          label: 'تا',
+          value: formatPaymentDate(transaction.dateTo),
+        },
+      )
+    }
+  }
+
+  if (transaction.type === 'outbound_volume_purchase') {
+    if (transaction.panelUsername) {
+      rows.push({
+        label: 'سرویس',
+        value: (
+          <span dir="ltr" style={{ unicodeBidi: 'plaintext' }}>
+            {transaction.panelUsername}
+          </span>
+        ),
+      })
+    }
+    if (transaction.quantity) {
+      rows.push({
+        label: 'حجم خرید',
+        value: `${transaction.quantity.toLocaleString('fa-IR')} گیگابایت`,
+      })
+    }
   }
 
   if (transaction.type === 'transfer' && transaction.counterpartyTelegramId) {
@@ -220,11 +311,16 @@ type TransactionDetailSheetProps = {
 
 export function TransactionDetailSheet({
   isOpen,
-  transaction,
+  transaction: transactionProp,
   onClose,
 }: TransactionDetailSheetProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [shouldRender, setShouldRender] = useState(false)
+  const [heldTransaction, setHeldTransaction] = useState(transactionProp)
+
+  useEffect(() => {
+    if (transactionProp) setHeldTransaction(transactionProp)
+  }, [transactionProp])
 
   useEffect(() => {
     if (isOpen) {
@@ -236,7 +332,7 @@ export function TransactionDetailSheet({
     }
 
     setIsVisible(false)
-    const timer = window.setTimeout(() => setShouldRender(false), 450)
+    const timer = window.setTimeout(() => setShouldRender(false), 480)
     return () => window.clearTimeout(timer)
   }, [isOpen])
 
@@ -259,8 +355,9 @@ export function TransactionDetailSheet({
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isOpen, onClose])
 
-  if (!shouldRender || !transaction) return null
+  if (!shouldRender || !heldTransaction) return null
 
+  const transaction = heldTransaction
   const rows = buildDetailRows(transaction)
 
   return createPortal(

@@ -67,7 +67,7 @@ export async function loadAuthedUser(req, options = {}) {
   const row = await upsertUserFromTelegram(telegramUser);
   const user = toPublicUser(row);
 
-  if (user.isBanned) {
+  if (user.isBanned && !options.allowBanned) {
     throw Object.assign(new Error("Unauthorized"), { status: 403 });
   }
 

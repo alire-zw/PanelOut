@@ -3,6 +3,7 @@ import {
   toPublicUser,
 } from "../db/users.js";
 import { getShopActivityStats } from "../db/pasarguardPanels.js";
+import { getPricingSettings } from "../db/pricingSettings.js";
 import { loadAuthedUser } from "../lib/auth.js";
 import { readJsonBody } from "../http/body.js";
 import { sendJson } from "../http/respond.js";
@@ -29,6 +30,18 @@ function sendRouteError(res, error) {
  *   GET   /api/shop/activity   — aggregated live panel stats
  */
 export async function handleUserRoutes(req, res, path) {
+  if (req.method === "GET" && path === "/api/shop/pricing") {
+    try {
+      await loadAuthedUser(req);
+      const pricing = await getPricingSettings();
+      sendJson(res, 200, { ok: true, pricing });
+      return true;
+    } catch (error) {
+      sendRouteError(res, error);
+      return true;
+    }
+  }
+
   if (req.method === "GET" && path === "/api/shop/activity") {
     try {
       await loadAuthedUser(req);
@@ -43,7 +56,7 @@ export async function handleUserRoutes(req, res, path) {
 
   if (req.method === "GET" && path === "/api/user/me") {
     try {
-      const { user } = await loadAuthedUser(req);
+      const { user } = await loadAuthedUser(req, { allowBanned: true });
       log.event("api", `GET /api/user/me  @${user.username || user.telegramId}`);
       sendJson(res, 200, { ok: true, user });
       return true;

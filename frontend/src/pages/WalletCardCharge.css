@@ -114,12 +114,7 @@
 }
 
 .wallet-card-charge__visual-top::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
-  pointer-events: none;
-  z-index: 0;
+  content: none;
 }
 
 .wallet-card-charge__visual-header {

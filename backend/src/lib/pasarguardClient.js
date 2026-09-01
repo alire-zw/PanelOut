@@ -6,6 +6,33 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function formatPasarGuardErrorDetail(data) {
+  if (data == null) return "";
+  if (typeof data === "string") return data;
+
+  if (Array.isArray(data)) {
+    return data
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object") {
+          const loc = Array.isArray(item.loc) ? item.loc.filter(Boolean).join(".") : "";
+          const msg = item.msg || item.message || JSON.stringify(item);
+          return loc ? `${loc}: ${msg}` : msg;
+        }
+        return String(item);
+      })
+      .join("; ");
+  }
+
+  if (typeof data === "object") {
+    if (data.detail != null) return formatPasarGuardErrorDetail(data.detail);
+    if (data.message != null) return String(data.message);
+    return JSON.stringify(data);
+  }
+
+  return String(data);
+}
+
 export function normalizePasarGuardBaseUrl(raw) {
   return String(raw || "")
     .trim()
@@ -124,7 +151,7 @@ export class PasarGuardClient {
 
         const detail =
           typeof data === "object" && data !== null
-            ? data.detail || data.message || JSON.stringify(data)
+            ? formatPasarGuardErrorDetail(data.detail ?? data.message ?? data)
             : String(data || res.statusText);
         const err = new Error(`HTTP ${res.status} ${path}: ${detail}`);
         err.status = res.status;
@@ -209,9 +236,9 @@ export class PasarGuardClient {
 
   async getAdmin(username) {
     const apiUsername = String(username || "").trim();
-    const data = await this.getAdmins({ username: apiUsername, limit: 1 });
+    const data = await this.getAdmins({ username: apiUsername, limit: 25 });
     const admin = (data?.admins || []).find(
-      (row) => String(row?.username || "").toLowerCase() === apiUsername.toLowerCase(),
+      (row) => String(row?.username || "") === apiUsername,
     );
     if (!admin) {
       const err = new Error(`HTTP 404 /api/admins: admin not found`);
@@ -228,7 +255,45 @@ export class PasarGuardClient {
     });
   }
 
+  disableAllAdminActiveUsers(username) {
+    return this.request(`/api/admin/${encodeURIComponent(username)}/users/disable`, {
+      method: "POST",
+    });
+  }
+
+  activateAllAdminDisabledUsers(username) {
+    return this.request(`/api/admin/${encodeURIComponent(username)}/users/activate`, {
+      method: "POST",
+    });
+  }
+
   getAdminRolesSimple() {
     return this.request("/api/admin-roles/simple");
+  }
+
+  getUsers(params = {}) {
+    const query = new URLSearchParams();
+    if (params.offset != null) query.set("offset", String(params.offset));
+    if (params.limit != null) query.set("limit", String(params.limit));
+    const qs = query.toString();
+    return this.request(qs ? `/api/users?${qs}` : "/api/users");
+  }
+
+  getUser(username) {
+    return this.request(`/api/user/${encodeURIComponent(String(username || "").trim())}`);
+  }
+
+  createUser(body) {
+    return this.request("/api/user", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  }
+
+  modifyUser(username, body) {
+    return this.request(`/api/user/${encodeURIComponent(String(username || "").trim())}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
   }
 }

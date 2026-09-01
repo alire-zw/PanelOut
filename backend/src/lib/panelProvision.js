@@ -14,7 +14,7 @@ function panelClientKey(panel) {
   return `${panel.id}:${buildBaseUrl(panel)}:${panel.adminUsername}`;
 }
 
-function getProvisionClient(panel, { fresh = false } = {}) {
+export function getProvisionClient(panel, { fresh = false } = {}) {
   const key = panelClientKey(panel);
   if (!fresh && clientPool.has(key)) {
     return clientPool.get(key);
@@ -73,12 +73,66 @@ function buildPanelDashboardUrl(panel) {
   return `${buildBaseUrl(panel)}/dashboard`;
 }
 
+function buildNoHwidPermissionOverrides() {
+  return {
+    min_hwid_per_user: null,
+    max_hwid_per_user: null,
+  };
+}
+
 function buildUsagePermissionOverrides() {
   return {
     max_users: null,
-    min_hwid_per_user: 1,
-    max_hwid_per_user: null,
+    ...buildNoHwidPermissionOverrides(),
   };
+}
+
+function mergePermissionOverrides(existingOverrides, patch) {
+  return {
+    ...(existingOverrides && typeof existingOverrides === "object" ? existingOverrides : {}),
+    ...patch,
+  };
+}
+
+export function adminHasHwidLimits(admin) {
+  const overrides = admin?.permission_overrides;
+  if (!overrides || typeof overrides !== "object") return false;
+  return overrides.min_hwid_per_user != null || overrides.max_hwid_per_user != null;
+}
+
+export function needsPanelAdminHwidPatch(admin) {
+  if (admin?.permission_overrides == null) return true;
+  return adminHasHwidLimits(admin);
+}
+
+export async function clearPanelAdminHwidLimits(panel, username) {
+  const apiUsername = String(username || "").trim();
+  let admin;
+
+  try {
+    admin = await requestWithReauth(panel, (client) => client.getAdmin(apiUsername));
+  } catch (err) {
+    if (err.status === 404) {
+      return { updated: false, reason: "not_found", username: apiUsername };
+    }
+    throw err;
+  }
+
+  if (!needsPanelAdminHwidPatch(admin)) {
+    return { updated: false, reason: "already_clear", username: apiUsername };
+  }
+
+  const permission_overrides = mergePermissionOverrides(
+    admin.permission_overrides,
+    buildNoHwidPermissionOverrides(),
+  );
+
+  await requestWithReauth(panel, (client) =>
+    client.modifyAdmin(apiUsername, { permission_overrides }),
+  );
+
+  log.event("panel", `hwid limits cleared user:${apiUsername} panel:${panel.id}`);
+  return { updated: true, username: apiUsername };
 }
 
 function mapProvisionError(err) {
@@ -108,7 +162,7 @@ function mapProvisionError(err) {
 }
 
 export async function createPanelTrialAdmin(panel, { username, telegramUserId }) {
-  const apiUsername = String(username || "").trim().toLowerCase();
+  const apiUsername = String(username || "").trim();
 
   if (await adminExists(panel, apiUsername)) {
     throw mapProvisionError(new Error("USERNAME_TAKEN"));
@@ -123,6 +177,7 @@ export async function createPanelTrialAdmin(panel, { username, telegramUserId })
     role_id: roleId,
     status: "active",
     data_limit: dataLimitBytes,
+    permission_overrides: buildNoHwidPermissionOverrides(),
     note: buildPanelClientComment(telegramUserId),
   };
 
@@ -142,11 +197,12 @@ export async function createPanelTrialAdmin(panel, { username, telegramUserId })
     panelUrl: buildPanelDashboardUrl(panel),
     adminId: admin?.id ?? null,
     volumeGb: PANEL_TRIAL_VOLUME_GB,
+    usedTraffic: BigInt(admin?.used_traffic ?? 0),
   };
 }
 
 export async function createPanelUsageAdmin(panel, { username, telegramUserId }) {
-  const apiUsername = String(username || "").trim().toLowerCase();
+  const apiUsername = String(username || "").trim();
 
   if (await adminExists(panel, apiUsername)) {
     throw mapProvisionError(new Error("USERNAME_TAKEN"));
@@ -178,11 +234,12 @@ export async function createPanelUsageAdmin(panel, { username, telegramUserId })
     password,
     panelUrl: buildPanelDashboardUrl(panel),
     adminId: admin?.id ?? null,
+    usedTraffic: BigInt(admin?.used_traffic ?? 0),
   };
 }
 
 export async function upgradeTrialAdminToPanelUsage(panel, { username, telegramUserId }) {
-  const apiUsername = String(username || "").trim().toLowerCase();
+  const apiUsername = String(username || "").trim();
   let admin;
 
   try {
@@ -225,9 +282,160 @@ export async function upgradeTrialAdminToPanelUsage(panel, { username, telegramU
     panelUrl: buildPanelDashboardUrl(panel),
     adminId: admin?.id ?? null,
     upgradedFromTrial: true,
+    usedTraffic: BigInt(admin?.used_traffic ?? 0),
   };
 }
 
-export function getPanelUsageMinimumBalanceIrt() {
-  return PANEL_USAGE_MIN_BALANCE_GB * PANEL_USAGE_PRICE_PER_GB;
+export async function getPanelAdminUsedTraffic(panel, username) {
+  const admin = await requestWithReauth(panel, (client) =>
+    client.getAdmin(String(username || "").trim()),
+  );
+  return BigInt(admin?.used_traffic ?? 0);
+}
+
+export async function getPanelAdminLiveStats(panel, username) {
+  const admin = await requestWithReauth(panel, (client) =>
+    client.getAdmin(String(username || "").trim()),
+  );
+
+  const usedTraffic = BigInt(admin?.used_traffic ?? 0);
+  const lifetimeUsedTraffic = BigInt(
+    admin?.lifetime_used_traffic ?? admin?.used_traffic ?? 0,
+  );
+  const totalUsers = Number(
+    admin?.total_users ?? admin?.users_count ?? admin?.users?.length ?? 0,
+  );
+  const maxUsers =
+    admin?.max_users != null && admin.max_users !== ""
+      ? Number(admin.max_users)
+      : admin?.permission_overrides?.max_users != null
+        ? Number(admin.permission_overrides.max_users)
+        : null;
+
+  return {
+    usedTraffic,
+    lifetimeUsedTraffic,
+    totalUsers: Number.isFinite(totalUsers) ? totalUsers : 0,
+    maxUsers: Number.isFinite(maxUsers) ? maxUsers : null,
+    isDisabled: Boolean(admin?.is_disabled),
+    enabled: admin?.enabled !== false && !admin?.is_disabled,
+  };
+}
+
+export async function disableAllPanelAdminActiveUsers(panel, username) {
+  return requestWithReauth(panel, (client) =>
+    client.disableAllAdminActiveUsers(String(username || "").trim()),
+  );
+}
+
+export async function activateAllPanelAdminDisabledUsers(panel, username) {
+  return requestWithReauth(panel, (client) =>
+    client.activateAllAdminDisabledUsers(String(username || "").trim()),
+  );
+}
+
+export async function verifyPanelAdminPassword(panel, username, password) {
+  const client = new PasarGuardClient({
+    baseUrl: buildBaseUrl(panel),
+    username: String(username || "").trim(),
+    password: String(password || ""),
+    timeoutMs: 8000,
+    maxRetries: 1,
+  });
+  try {
+    await client.authenticateOnce();
+    return true;
+  } catch (err) {
+    if (err.status === 401 || err.status === 403) return false;
+    throw err;
+  }
+}
+
+function parseAdminDataLimitBytes(admin) {
+  const raw =
+    admin?.data_limit ??
+    admin?.dataLimit ??
+    admin?.data_limit_bytes ??
+    admin?.traffic_limit ??
+    admin?.trafficLimit ??
+    0;
+  try {
+    const value = BigInt(raw || 0);
+    if (value <= 0n) return 0n;
+    const GB = 1024n ** 3n;
+    if (value < GB) return value * GB;
+    return value;
+  } catch {
+    return 0n;
+  }
+}
+
+export async function lookupLegacyPanelAdmin(panel, { username, password }) {
+  const apiUsername = String(username || "").trim();
+  let admin;
+
+  try {
+    admin = await requestWithReauth(panel, (client) => client.getAdmin(apiUsername));
+  } catch (err) {
+    if (err.status === 404) return null;
+    throw mapProvisionError(err);
+  }
+
+  const passwordOk = await verifyPanelAdminPassword(panel, apiUsername, password);
+  if (!passwordOk) {
+    const err = new Error("نام کاربری یا رمز عبور نادرست است");
+    err.status = 401;
+    err.code = "INVALID_CREDENTIALS";
+    throw err;
+  }
+
+  return {
+    username: admin?.username || apiUsername,
+    password,
+    panelUrl: buildPanelDashboardUrl(panel),
+    adminId: admin?.id ?? admin?.admin_id ?? null,
+    usedTraffic: BigInt(admin?.used_traffic ?? 0),
+    dataLimitBytes: parseAdminDataLimitBytes(admin),
+  };
+}
+
+export async function convertLegacyPanelToUnlimited(panel, { username, telegramUserId }) {
+  const apiUsername = String(username || "").trim();
+  const roleId = await pickRoleId(panel);
+
+  try {
+    const admin = await requestWithReauth(panel, (client) =>
+      client.modifyAdmin(apiUsername, {
+        role_id: roleId,
+        status: "active",
+        data_limit: 0,
+        permission_overrides: buildUsagePermissionOverrides(),
+        note: buildPanelClientComment(telegramUserId),
+      }),
+    );
+    log.event("panel", `legacy claimed user:${apiUsername} tg:${telegramUserId} panel:${panel.id}`);
+    return admin;
+  } catch (err) {
+    log.error("panel-provision", `legacy claim modify failed — ${err.message}`);
+    throw mapProvisionError(err);
+  }
+}
+
+export async function claimLegacyPanelAdmin(panel, { username, password, telegramUserId }) {
+  const found = await lookupLegacyPanelAdmin(panel, { username, password });
+  if (!found) return null;
+  await convertLegacyPanelToUnlimited(panel, { username: found.username, telegramUserId });
+  return found;
+}
+
+export async function updatePanelAdminPassword(panel, username, newPassword) {
+  return requestWithReauth(panel, (client) =>
+    client.modifyAdmin(String(username || "").trim(), {
+      password: String(newPassword || ""),
+    }),
+  );
+}
+
+export function getPanelUsageMinimumBalanceIrt(pricePerGb = PANEL_USAGE_PRICE_PER_GB) {
+  return PANEL_USAGE_MIN_BALANCE_GB * (Number(pricePerGb) || PANEL_USAGE_PRICE_PER_GB);
 }

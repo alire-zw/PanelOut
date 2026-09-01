@@ -14,6 +14,9 @@ import {
 import { ensureAdminSystemChannelsTable } from "./systemChannels.js";
 import { ensurePasarGuardPanelsTable } from "./pasarguardPanels.js";
 import { ensureUserPanelSubscriptionsTable } from "./userPanelSubscriptions.js";
+import { ensurePricingSettingsTable } from "./pricingSettings.js";
+import { ensurePanelUsageChargesTable } from "./panelUsageCharges.js";
+import { ensureOutboundUsageChargesTable } from "./outboundUsageCharges.js";
 import { ensureAuditLogTable } from "../lib/audit.js";
 import { config } from "../config.js";
 import { log } from "../lib/logger.js";
@@ -31,6 +34,9 @@ export async function ensureSchema() {
   await ensureAdminSystemChannelsTable();
   await ensurePasarGuardPanelsTable();
   await ensureUserPanelSubscriptionsTable();
+  await ensurePanelUsageChargesTable();
+  await ensureOutboundUsageChargesTable();
+  await ensurePricingSettingsTable();
   await ensureAuditLogTable();
 
   if (config.supportTelegramUsername) {
@@ -42,6 +48,6 @@ export async function ensureSchema() {
 
   log.service(
     "Schema",
-    "users, cards, charges, transfers, tron, support, channels, panels, security",
+    "users, cards, charges, transfers, tron, support, channels, panels, billing, security",
   );
 }

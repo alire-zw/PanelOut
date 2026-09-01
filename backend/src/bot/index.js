@@ -2,6 +2,7 @@ import { Bot } from "grammy";
 import { config } from "../config.js";
 import { handleStart } from "./commands/start.js";
 import { handleMyChatMember } from "./handlers/myChatMember.js";
+import { handleCardChargeCallback } from "./handlers/cardChargeCallback.js";
 import { log } from "../lib/logger.js";
 
 export function createBot() {
@@ -9,6 +10,7 @@ export function createBot() {
 
   bot.command("start", handleStart);
   bot.on("my_chat_member", handleMyChatMember);
+  bot.callbackQuery(/^cc:[ar]:\d+$/, handleCardChargeCallback);
 
   bot.catch((err) => {
     const updateId = err.ctx?.update?.update_id;

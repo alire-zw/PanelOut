@@ -6,7 +6,7 @@ import { useTelegram } from '../hooks/useTelegram'
 import { defaultAvatar, HEADER_BOX_SIZE } from './headerConstants'
 import './Header.css'
 
-const hiddenPaths = ['/profile', '/wallet', '/panel', '/faq']
+const hiddenPaths = ['/profile', '/wallet', '/panel', '/outbound', '/faq']
 
 export function Header() {
   const { pathname } = useLocation()
@@ -21,7 +21,8 @@ export function Header() {
   const hideHeader =
     hiddenPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`)) ||
     pathname.startsWith('/support/') ||
-    pathname.startsWith('/admin')
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/dashboard/')
 
   if (hideHeader) {
     return null

@@ -45,7 +45,7 @@ export function BottomSheet({
     }
 
     setIsVisible(false)
-    const timer = window.setTimeout(() => setShouldRender(false), 450)
+    const timer = window.setTimeout(() => setShouldRender(false), 480)
     return () => window.clearTimeout(timer)
   }, [isOpen])
 

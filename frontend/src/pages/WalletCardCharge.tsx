@@ -12,7 +12,13 @@ import {
   syncActiveBankCards,
   writeLocalBankCards,
 } from '../lib/bankCards'
-import { getBankVisual, getRandomCardPattern } from '../lib/bankDetect'
+import {
+  getBankVisual,
+  getCardTopBackgroundStyle,
+  getRandomCardPattern,
+  preloadCardPatterns,
+} from '../lib/bankDetect'
+import type { CardPatternUrl } from '../lib/bankDetect'
 import {
   formatCardNumberDisplay,
   formatShebaDisplay,
@@ -85,7 +91,7 @@ export function WalletCardChargePage() {
   const amount = chargeState?.amount ?? 0
 
   const [selectedCard, setSelectedCard] = useState<BankCard | null>(null)
-  const [cardPattern, setCardPattern] = useState(() => getRandomCardPattern())
+  const [cardPattern, setCardPattern] = useState<CardPatternUrl>(() => getRandomCardPattern())
   const [loadingCards, setLoadingCards] = useState(true)
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
   const [receiptLabelNumber, setReceiptLabelNumber] = useState(0)
@@ -104,6 +110,10 @@ export function WalletCardChargePage() {
   const handleBack = useCallback(() => {
     navigate('/wallet/charge/payment', { state: { amount }, replace: true })
   }, [navigate, amount])
+
+  useEffect(() => {
+    preloadCardPatterns()
+  }, [])
 
   useEffect(() => {
     if (isChargeAmountValid(amount)) return
@@ -385,13 +395,7 @@ export function WalletCardChargePage() {
           >
             <div
               className="wallet-card-charge__visual-top"
-              style={{
-                background: `linear-gradient(135deg, ${visual.color1} 0%, ${visual.color2} 100%)`,
-                backgroundImage: `url('${pattern}'), linear-gradient(135deg, ${visual.color1} 0%, ${visual.color2} 100%)`,
-                backgroundSize: 'cover, cover',
-                backgroundPosition: 'center, center',
-                backgroundRepeat: 'no-repeat, no-repeat',
-              }}
+              style={getCardTopBackgroundStyle(visual.color1, visual.color2, pattern)}
             >
               <div className="wallet-card-charge__visual-header">
                 <div className="wallet-card-charge__bank-meta">

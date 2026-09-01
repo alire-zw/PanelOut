@@ -708,6 +708,7 @@ export async function replyAdminSupportTicket(id, { body, status } = {}) {
 }
 
 const SUPPORT_TELEGRAM_KEY = "site:settings:support_telegram";
+const SUPPORT_TELEGRAM_ENABLED_KEY = "site:settings:support_telegram_enabled";
 
 export function normalizeSupportTelegram(raw) {
   const cleaned = String(raw || "")
@@ -728,10 +729,34 @@ export async function getSupportTelegramUsername() {
   return normalizeSupportTelegram(raw);
 }
 
+export async function isSupportTelegramEnabled() {
+  const stored = await redis.get(SUPPORT_TELEGRAM_ENABLED_KEY);
+  if (stored === "0" || stored === "false") return false;
+  if (stored === "1" || stored === "true") return true;
+  return Boolean(await getSupportTelegramUsername());
+}
+
+export async function getPublicSupportTelegramUsername() {
+  if (!(await isSupportTelegramEnabled())) return null;
+  return getSupportTelegramUsername();
+}
+
+export async function getSupportContactSettings() {
+  const telegramUsername = await getSupportTelegramUsername();
+  const enabled = await isSupportTelegramEnabled();
+  return { telegramUsername, enabled };
+}
+
+export async function setSupportTelegramEnabled(enabled) {
+  await redis.set(SUPPORT_TELEGRAM_ENABLED_KEY, enabled ? "1" : "0");
+  return Boolean(enabled);
+}
+
 export async function setSupportTelegramUsername(raw) {
   const normalized = normalizeSupportTelegram(raw);
   if (!normalized) {
     await redis.del(SUPPORT_TELEGRAM_KEY);
+    await redis.set(SUPPORT_TELEGRAM_ENABLED_KEY, "0");
     return null;
   }
   await redis.set(SUPPORT_TELEGRAM_KEY, normalized);

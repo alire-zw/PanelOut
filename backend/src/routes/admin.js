@@ -20,18 +20,26 @@ import {
   syncAdminCharges,
 } from "../db/adminChargesCache.js";
 import { invalidateWalletTransactionsCache } from "../db/walletTransactions.js";
+import { getAdminOverview } from "../services/adminOverview.service.js";
+import { getAdminCombinedUsageInvoices } from "../services/adminUsageInvoices.service.js";
 import {
   listUsersAdmin,
   findUserByTelegramId,
-  countUsers,
   toPublicUser,
 } from "../db/users.js";
 import {
-  countOpenSupportTickets,
+  adminSetUserBalance,
+  adminSetUserBanned,
+  adminSetUserPanelStatus,
+  adminSetUserRole,
+  getAdminUserDetail,
+} from "../services/adminUserManagement.service.js";
+import {
   getAdminSupportTicket,
-  getSupportTelegramUsername,
+  getSupportContactSettings,
   listAdminSupportTickets,
   replyAdminSupportTicket,
+  setSupportTelegramEnabled,
   setSupportTelegramUsername,
 } from "../db/supportTickets.js";
 import {
@@ -58,6 +66,10 @@ import {
   getPaymentSettings,
   updatePaymentSettings,
 } from "../db/paymentSettings.js";
+import {
+  getPricingSettings,
+  updatePricingSettings,
+} from "../db/pricingSettings.js";
 import { config } from "../config.js";
 import { readJsonBody } from "../http/body.js";
 import { sendJson } from "../http/respond.js";
@@ -110,24 +122,24 @@ export async function handleAdminRoutes(req, res, path) {
   try {
     if (req.method === "GET" && path === "/api/admin/overview") {
       await loadAdminUser(req);
-      const sql = getSql();
-      const [usersTotal, pendingCharges, activeCards, openTickets] =
-        await Promise.all([
-          countUsers(),
-          sql`SELECT COUNT(*)::int AS count FROM card_charge_requests WHERE status = 'pending'`,
-          sql`SELECT COUNT(*)::int AS count FROM admin_bank_cards WHERE is_active = TRUE`,
-          countOpenSupportTickets(),
-        ]);
-
       sendJson(res, 200, {
         ok: true,
-        overview: {
-          usersCount: usersTotal,
-          pendingCharges: Number(pendingCharges[0]?.count ?? 0),
-          activeCards: Number(activeCards[0]?.count ?? 0),
-          openTickets,
-        },
+        overview: await getAdminOverview(),
       });
+      return true;
+    }
+
+    if (req.method === "GET" && path.startsWith("/api/admin/usage-invoices")) {
+      await loadAdminUser(req);
+      const url = new URL(req.url || "/", "http://localhost");
+      const range = url.searchParams.get("range") || "week";
+      const allowedRanges = new Set(["today", "week", "month", "all"]);
+      const payload = await getAdminCombinedUsageInvoices({
+        range: allowedRanges.has(range) ? range : "week",
+        limit: url.searchParams.get("limit"),
+        offset: url.searchParams.get("offset"),
+      });
+      sendJson(res, 200, { ok: true, ...payload });
       return true;
     }
 
@@ -140,6 +152,39 @@ export async function handleAdminRoutes(req, res, path) {
           ...settings,
           tronConfigured: config.tronConfigured,
         },
+      });
+      return true;
+    }
+
+    if (req.method === "GET" && path === "/api/admin/pricing-settings") {
+      await loadAdminUser(req);
+      const pricing = await getPricingSettings();
+      sendJson(res, 200, {
+        ok: true,
+        pricing,
+      });
+      return true;
+    }
+
+    if (
+      (req.method === "PATCH" || req.method === "PUT") &&
+      path === "/api/admin/pricing-settings"
+    ) {
+      const { user, telegramUser } = await loadAdminUser(req, { write: true });
+      const body = await readJsonBody(req);
+      const pricing = await updatePricingSettings(body, telegramUser.id);
+      await writeAdminAudit({
+        req,
+        actor: user,
+        action: "pricing_settings.update",
+        targetType: "pricing_settings",
+        targetId: "1",
+        meta: pricing,
+      });
+      log.event("api", `PATCH /api/admin/pricing-settings tg:${telegramUser.id}`);
+      sendJson(res, 200, {
+        ok: true,
+        pricing,
       });
       return true;
     }
@@ -185,6 +230,171 @@ export async function handleAdminRoutes(req, res, path) {
     }
 
     const userMatch = path.match(/^\/api\/admin\/users\/(\d+)$/);
+    const userDetailMatch = path.match(/^\/api\/admin\/users\/(\d+)\/detail$/);
+    const userBanMatch = path.match(/^\/api\/admin\/users\/(\d+)\/ban$/);
+    const userBalanceMatch = path.match(/^\/api\/admin\/users\/(\d+)\/balance$/);
+    const userRoleMatch = path.match(/^\/api\/admin\/users\/(\d+)\/role$/);
+    const userPanelMatch = path.match(
+      /^\/api\/admin\/users\/(\d+)\/panels\/(\d+)$/,
+    );
+
+    if (req.method === "GET" && userDetailMatch) {
+      await loadAdminUser(req);
+      const telegramId = parseId(userDetailMatch[1]);
+      if (!telegramId) {
+        sendJson(res, 400, { ok: false, error: "شناسه کاربر نامعتبر است" });
+        return true;
+      }
+      const detail = await getAdminUserDetail(telegramId);
+      sendJson(res, 200, { ok: true, ...detail });
+      return true;
+    }
+
+    if (req.method === "PATCH" && userBanMatch) {
+      const { user, telegramUser } = await loadAdminUser(req, { write: true });
+      const telegramId = parseId(userBanMatch[1]);
+      if (!telegramId) {
+        sendJson(res, 400, { ok: false, error: "شناسه کاربر نامعتبر است" });
+        return true;
+      }
+      const body = await readJsonBody(req);
+      const result = await adminSetUserBanned(user, telegramId, Boolean(body.isBanned));
+      await writeAdminAudit({
+        req,
+        actor: user,
+        action: result.user.isBanned ? "user.ban" : "user.unban",
+        targetType: "user",
+        targetId: telegramId,
+        meta: {
+          targetUserTelegramId: String(telegramId),
+          previousBanned: result.previousBanned,
+          isBanned: result.user.isBanned,
+        },
+      });
+      log.event(
+        "api",
+        `PATCH /api/admin/users/${telegramId}/ban banned:${result.user.isBanned} by:${telegramUser.id}`,
+      );
+      sendJson(res, 200, { ok: true, user: result.user });
+      return true;
+    }
+
+    if (req.method === "PATCH" && userBalanceMatch) {
+      const { user, telegramUser } = await loadAdminUser(req, { write: true });
+      const telegramId = parseId(userBalanceMatch[1]);
+      if (!telegramId) {
+        sendJson(res, 400, { ok: false, error: "شناسه کاربر نامعتبر است" });
+        return true;
+      }
+      const body = await readJsonBody(req);
+      const result = await adminSetUserBalance(
+        user,
+        telegramId,
+        body.balanceToman,
+        body.note,
+      );
+      await invalidateWalletTransactionsCache(telegramId);
+      await writeAdminAudit({
+        req,
+        actor: user,
+        action: "user.balance.set",
+        targetType: "user",
+        targetId: telegramId,
+        meta: {
+          targetUserTelegramId: String(telegramId),
+          previousBalance: result.previousBalance,
+          newBalance: result.newBalance,
+          note: result.note,
+        },
+      });
+      log.event(
+        "api",
+        `PATCH /api/admin/users/${telegramId}/balance ${result.previousBalance}->${result.newBalance} by:${telegramUser.id}`,
+      );
+      sendJson(res, 200, {
+        ok: true,
+        user: result.user,
+        previousBalance: result.previousBalance,
+        newBalance: result.newBalance,
+      });
+      return true;
+    }
+
+    if (req.method === "PATCH" && userRoleMatch) {
+      const { user, telegramUser } = await loadAdminUser(req, {
+        write: true,
+        supervisorOnly: true,
+      });
+      const telegramId = parseId(userRoleMatch[1]);
+      if (!telegramId) {
+        sendJson(res, 400, { ok: false, error: "شناسه کاربر نامعتبر است" });
+        return true;
+      }
+      const body = await readJsonBody(req);
+      const result = await adminSetUserRole(user, telegramId, body.role);
+      await writeAdminAudit({
+        req,
+        actor: user,
+        action: "user.role.set",
+        targetType: "user",
+        targetId: telegramId,
+        meta: {
+          targetUserTelegramId: String(telegramId),
+          previousRole: result.previousRole,
+          newRole: result.newRole,
+        },
+      });
+      log.event(
+        "api",
+        `PATCH /api/admin/users/${telegramId}/role ${result.previousRole}->${result.newRole} by:${telegramUser.id}`,
+      );
+      sendJson(res, 200, {
+        ok: true,
+        user: result.user,
+        previousRole: result.previousRole,
+        newRole: result.newRole,
+      });
+      return true;
+    }
+
+    if (req.method === "PATCH" && userPanelMatch) {
+      const { user, telegramUser } = await loadAdminUser(req, { write: true });
+      const telegramId = parseId(userPanelMatch[1]);
+      const subscriptionId = parseId(userPanelMatch[2]);
+      if (!telegramId || !subscriptionId) {
+        sendJson(res, 400, { ok: false, error: "شناسه نامعتبر است" });
+        return true;
+      }
+      const body = await readJsonBody(req);
+      const result = await adminSetUserPanelStatus(
+        user,
+        telegramId,
+        subscriptionId,
+        body.status,
+      );
+      await writeAdminAudit({
+        req,
+        actor: user,
+        action: "user.panel.status",
+        targetType: "user_panel",
+        targetId: subscriptionId,
+        meta: {
+          targetUserTelegramId: String(telegramId),
+          subscriptionId: String(subscriptionId),
+          clientUsername: result.panel.clientUsername,
+          serviceType: result.panel.serviceType,
+          previousStatus: result.previousStatus,
+          newStatus: result.newStatus,
+        },
+      });
+      log.event(
+        "api",
+        `PATCH /api/admin/users/${telegramId}/panels/${subscriptionId} ${result.previousStatus}->${result.newStatus} by:${telegramUser.id}`,
+      );
+      sendJson(res, 200, { ok: true, panel: result.panel });
+      return true;
+    }
+
     if (req.method === "GET" && userMatch) {
       await loadAdminUser(req);
       const telegramId = parseId(userMatch[1]);
@@ -355,6 +565,18 @@ export async function handleAdminRoutes(req, res, path) {
         meta: { amountToman: charge.amountToman, user: charge.telegramUserId },
       });
       log.event("api", `POST /api/admin/charges/${id}/approve by:${telegramUser.id}`);
+
+      void import("../services/panelUsageBilling.service.js")
+        .then(({ reactivateSuspendedPanelsAfterWalletCredit }) =>
+          reactivateSuspendedPanelsAfterWalletCredit(charge.telegramUserId),
+        )
+        .catch(() => {});
+      void import("../services/outboundUsageBilling.service.js")
+        .then(({ reactivateSuspendedOutboundAfterWalletCredit }) =>
+          reactivateSuspendedOutboundAfterWalletCredit(charge.telegramUserId),
+        )
+        .catch(() => {});
+
       sendJson(res, 200, {
         ok: true,
         charge: attachSignedReceiptUrl(charge, telegramUser.id),
@@ -448,8 +670,8 @@ export async function handleAdminRoutes(req, res, path) {
 
     if (req.method === "GET" && path === "/api/admin/settings/support-contact") {
       await loadAdminUser(req);
-      const telegramUsername = await getSupportTelegramUsername();
-      sendJson(res, 200, { ok: true, telegramUsername });
+      const settings = await getSupportContactSettings();
+      sendJson(res, 200, { ok: true, ...settings });
       return true;
     }
 
@@ -459,22 +681,46 @@ export async function handleAdminRoutes(req, res, path) {
     ) {
       const { telegramUser, user } = await loadAdminUser(req, { write: true });
       const body = await readJsonBody(req);
-      const telegramUsername = await setSupportTelegramUsername(
-        body.telegramUsername ?? body.username ?? "",
-      );
+      const current = await getSupportContactSettings();
+      let telegramUsername = current.telegramUsername;
+      let enabled = current.enabled;
+
+      if (body.telegramUsername !== undefined || body.username !== undefined) {
+        telegramUsername = await setSupportTelegramUsername(
+          body.telegramUsername ?? body.username ?? "",
+        );
+        if (telegramUsername && body.enabled === undefined) {
+          enabled = await setSupportTelegramEnabled(true);
+        } else if (!telegramUsername) {
+          enabled = false;
+        }
+      }
+
+      if (body.enabled !== undefined) {
+        if (body.enabled && !telegramUsername) {
+          sendJson(res, 400, {
+            ok: false,
+            error: "ابتدا آیدی تلگرام پشتیبانی را ذخیره کنید",
+          });
+          return true;
+        }
+        enabled = await setSupportTelegramEnabled(Boolean(body.enabled));
+      }
+
+      const settings = { telegramUsername, enabled };
       await writeAdminAudit({
         req,
         actor: user,
         action: "settings.support_contact",
         targetType: "settings",
         targetId: null,
-        meta: { telegramUsername },
+        meta: settings,
       });
       log.event(
         "api",
-        `PUT /api/admin/settings/support-contact by:${telegramUser.id} user:${telegramUsername || "cleared"}`,
+        `PUT /api/admin/settings/support-contact by:${telegramUser.id} user:${telegramUsername || "cleared"} enabled:${enabled}`,
       );
-      sendJson(res, 200, { ok: true, telegramUsername });
+      sendJson(res, 200, { ok: true, ...settings });
       return true;
     }
 

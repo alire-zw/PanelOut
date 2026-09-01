@@ -12,7 +12,7 @@ import {
   writeLocalBankCards,
   type BankCardsPayload,
 } from '../lib/bankCards'
-import { getBankVisual, getCardPattern } from '../lib/bankDetect'
+import { getBankVisual, getCardPattern, getCardTopBackgroundStyle, preloadCardPatterns } from '../lib/bankDetect'
 import {
   createAdminCard,
   deleteAdminCard,
@@ -138,6 +138,10 @@ export function AdminCardsPage() {
       showNotification(error instanceof Error ? error.message : 'خطا در بروزرسانی لیست', 'error')
     }
   }, [applyPayload, version])
+
+  useEffect(() => {
+    preloadCardPatterns()
+  }, [])
 
   useEffect(() => {
     if (!ready) return
@@ -272,13 +276,7 @@ export function AdminCardsPage() {
             >
               <div
                 className="admin-bank-card__top"
-                style={{
-                  background: `linear-gradient(135deg, ${visual.color1} 0%, ${visual.color2} 100%)`,
-                  backgroundImage: `url('${pattern}'), linear-gradient(135deg, ${visual.color1} 0%, ${visual.color2} 100%)`,
-                  backgroundSize: 'cover, cover',
-                  backgroundPosition: 'center, center',
-                  backgroundRepeat: 'no-repeat, no-repeat',
-                }}
+                style={getCardTopBackgroundStyle(visual.color1, visual.color2, pattern)}
               >
                 <div className="admin-bank-card__header">
                   <div className="admin-bank-card__bank">

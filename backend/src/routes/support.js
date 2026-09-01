@@ -4,7 +4,7 @@ import { sendJson } from "../http/respond.js";
 import { log } from "../lib/logger.js";
 import {
   createUserTicket,
-  getSupportTelegramUsername,
+  getPublicSupportTelegramUsername,
   getSupportTicketsCached,
   getUserTicket,
   replyUserTicket,
@@ -42,8 +42,8 @@ export async function handleSupportRoutes(req, res, path) {
 
   try {
     if (req.method === "GET" && path === "/api/support/contact") {
-      await loadAuthedUser(req);
-      const telegramUsername = await getSupportTelegramUsername();
+      await loadAuthedUser(req, { allowBanned: true });
+      const telegramUsername = await getPublicSupportTelegramUsername();
       sendJson(res, 200, {
         ok: true,
         telegramUsername,

@@ -23,7 +23,7 @@ import './AdminSystemChannels.css'
 
 type ViewMode = 'list' | 'add'
 
-function looksLikeTelegramPostLink(value: string): boolean {
+function looksLikeTelegramPostLink(value: string, allowPrivate = false): boolean {
   const trimmed = value.trim()
   if (!trimmed) return false
 
@@ -39,7 +39,12 @@ function looksLikeTelegramPostLink(value: string): boolean {
     }
 
     const parts = url.pathname.split('/').filter(Boolean)
-    if (parts[0]?.toLowerCase() === 'c') return false
+    if (parts[0]?.toLowerCase() === 'c') {
+      if (!allowPrivate) return false
+      const internalId = parts[1] ?? ''
+      const messageId = Number.parseInt(parts[2] ?? '', 10)
+      return /^\d{5,20}$/.test(internalId) && Number.isFinite(messageId) && messageId > 0
+    }
     const usernameIndex = parts[0]?.toLowerCase() === 's' ? 1 : 0
     const username = parts[usernameIndex]
     const messageId = Number.parseInt(parts[usernameIndex + 1] ?? '', 10)
@@ -47,6 +52,13 @@ function looksLikeTelegramPostLink(value: string): boolean {
   } catch {
     return false
   }
+}
+
+function formatChannelIdentity(username: string) {
+  if (username.startsWith('c/')) {
+    return username
+  }
+  return `@${username}`
 }
 
 function openExternal(url: string) {
@@ -143,8 +155,13 @@ export function AdminSystemChannelsPage() {
   const handleRegister = async () => {
     if (!selectedSlot || isRegistering) return
     const link = postLink.trim()
-    if (!looksLikeTelegramPostLink(link)) {
-      setRegisterError('لطفاً لینک معتبر یکی از پست‌های عمومی کانال را وارد کنید')
+    const allowPrivate = selectedSlot.slotKey === 'admin_report'
+    if (!looksLikeTelegramPostLink(link, allowPrivate)) {
+      setRegisterError(
+        allowPrivate
+          ? 'لینک معتبر پست کانال را وارد کنید (عمومی یا خصوصی مثل t.me/c/…)'
+          : 'لطفاً لینک معتبر یکی از پست‌های عمومی کانال را وارد کنید',
+      )
       return
     }
 
@@ -229,8 +246,9 @@ export function AdminSystemChannelsPage() {
       {view === 'list' ? (
         <>
           <p className="admin-sys-ch__intro shop-rise" style={{ '--rise-index': 1 } as CSSProperties}>
-            کانال گزارش ادمین همیشه فعال است و فقط برای ادمین. دو کانال دیگر را می‌توانید برای عضویت
-            اجباری کاربران قفل کنید؛ ربات را ادمین کانال کنید و لینک یک پست عمومی را بفرستید.
+            کانال گزارش ادمین همیشه فعال است و فقط برای ادمین؛ لینک پست عمومی یا خصوصی
+            (مثل <span dir="ltr">t.me/c/…</span>) پذیرفته می‌شود. دو کانال دیگر برای عضویت اجباری
+            کاربران هستند و فقط لینک پست عمومی می‌گیرند.
           </p>
           {loading ? (
             <p className="admin-empty">در حال بارگذاری…</p>
@@ -252,7 +270,8 @@ export function AdminSystemChannelsPage() {
                       {channel ? (
                         isAdminReport ? (
                           <span className="admin-sys-ch__row-meta">
-                            فقط ادمین · <span dir="ltr">@{channel.username}</span>
+                            فقط ادمین ·{' '}
+                            <span dir="ltr">{formatChannelIdentity(channel.username)}</span>
                           </span>
                         ) : (
                           <span className="admin-sys-ch__row-meta admin-sys-ch__row-meta--id">
@@ -334,7 +353,11 @@ export function AdminSystemChannelsPage() {
             >
               افزودن ربات به کانال
             </button>
-            <p>۲. لینک یکی از پست‌های عمومی همان کانال را وارد کنید.</p>
+            <p>
+              {selectedSlot.slotKey === 'admin_report'
+                ? '۲. لینک یکی از پست‌های کانال را وارد کنید (عمومی یا خصوصی).'
+                : '۲. لینک یکی از پست‌های عمومی همان کانال را وارد کنید.'}
+            </p>
           </div>
 
           <label className="admin-sys-ch__field">
@@ -347,7 +370,11 @@ export function AdminSystemChannelsPage() {
                   setPostLink(event.target.value)
                   setRegisterError(null)
                 }}
-                placeholder="https://t.me/channel/123"
+                placeholder={
+                  selectedSlot.slotKey === 'admin_report'
+                    ? 'https://t.me/c/2601299495/44'
+                    : 'https://t.me/channel/123'
+                }
                 dir="ltr"
                 inputMode="url"
               />

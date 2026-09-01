@@ -52,6 +52,15 @@ export async function ensureCardChargesTable() {
     ON card_charge_requests (telegram_user_id, created_at DESC)
   `);
 
+  await sql.unsafe(`
+    ALTER TABLE card_charge_requests
+    ADD COLUMN IF NOT EXISTS report_chat_id BIGINT NULL
+  `);
+  await sql.unsafe(`
+    ALTER TABLE card_charge_requests
+    ADD COLUMN IF NOT EXISTS report_message_id BIGINT NULL
+  `);
+
   await mkdir(RECEIPTS_DIR, { recursive: true });
 }
 
@@ -141,6 +150,10 @@ function toPublicCharge(row, { cardRow = null, userRow = null } = {}) {
     reviewedBy: row.reviewed_by != null ? Number(row.reviewed_by) : null,
     reviewedAt: row.reviewed_at ? new Date(row.reviewed_at).toISOString() : null,
     createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+    reportChatId:
+      row.report_chat_id != null ? Number(row.report_chat_id) : null,
+    reportMessageId:
+      row.report_message_id != null ? Number(row.report_message_id) : null,
     user: userRow
       ? {
           telegramId: Number(userRow.user_id),
@@ -150,6 +163,50 @@ function toPublicCharge(row, { cardRow = null, userRow = null } = {}) {
         }
       : null,
   };
+}
+
+export async function setCardChargeReportMessage(id, chatId, messageId) {
+  const sql = getSql();
+  await sql`
+    UPDATE card_charge_requests
+    SET
+      report_chat_id = ${chatId},
+      report_message_id = ${messageId}
+    WHERE id = ${id}
+  `;
+}
+
+/** Charge + bank card for admin-report message sync. */
+export async function findCardChargeForReport(id) {
+  const sql = getSql();
+  const [row] = await sql`
+    SELECT c.*,
+      card.card_number,
+      card.sheba,
+      card.holder_name,
+      card.is_active AS card_is_active,
+      card.created_at AS card_created_at,
+      card.updated_at AS card_updated_at,
+      card.id AS card_row_id
+    FROM card_charge_requests c
+    LEFT JOIN admin_bank_cards card ON card.id = c.bank_card_id
+    WHERE c.id = ${id}
+    LIMIT 1
+  `;
+  if (!row) return null;
+  return toPublicCharge(row, {
+    cardRow: row.card_row_id
+      ? {
+          id: row.card_row_id,
+          card_number: row.card_number,
+          sheba: row.sheba,
+          holder_name: row.holder_name,
+          is_active: row.card_is_active,
+          created_at: row.card_created_at,
+          updated_at: row.card_updated_at,
+        }
+      : null,
+  });
 }
 
 export async function createCardChargeRequest({
@@ -416,7 +473,26 @@ export async function approveCardCharge(id, reviewerTelegramId) {
     "charges",
     `approved #${result.id} tg:${result.telegram_user_id} amount:${result.amount_toman} by:${reviewerTelegramId}`,
   );
-  return toPublicCharge(result);
+
+  const charge = toPublicCharge(result);
+
+  void import("../services/cardChargeNotification.service.js")
+    .then(({ notifyCardChargeApproved }) =>
+      notifyCardChargeApproved({
+        telegramUserId: charge.telegramUserId,
+        amountToman: charge.amountToman,
+        chargeId: charge.id,
+      }),
+    )
+    .catch(() => {});
+
+  void import("../services/cardChargeReport.service.js")
+    .then(({ syncCardChargeAdminReport }) =>
+      syncCardChargeAdminReport(charge.id),
+    )
+    .catch(() => {});
+
+  return charge;
 }
 
 export async function rejectCardCharge(id, reviewerTelegramId, note) {
@@ -456,5 +532,14 @@ export async function rejectCardCharge(id, reviewerTelegramId, note) {
     "charges",
     `rejected #${updated.id} tg:${updated.telegram_user_id} by:${reviewerTelegramId}${adminNote ? " with-note" : ""}`,
   );
-  return toPublicCharge(updated);
+
+  const charge = toPublicCharge(updated);
+
+  void import("../services/cardChargeReport.service.js")
+    .then(({ syncCardChargeAdminReport }) =>
+      syncCardChargeAdminReport(charge.id),
+    )
+    .catch(() => {});
+
+  return charge;
 }

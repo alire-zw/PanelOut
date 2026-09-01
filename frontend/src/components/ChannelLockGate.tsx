@@ -83,6 +83,13 @@ export function ChannelLockGate() {
       return
     }
 
+    if (user.isBanned) {
+      setIsOpen(false)
+      setChannels([])
+      stopPolling()
+      return
+    }
+
     if (user.canAccessAdminPanel || user.role === 'admin' || user.role === 'supervisor') {
       setIsOpen(false)
       setChannels([])

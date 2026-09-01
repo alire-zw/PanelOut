@@ -41,6 +41,7 @@ export type TelegramWebApp = {
   initData: string
   initDataUnsafe: {
     user?: TelegramUser
+    start_param?: string
   }
   viewportHeight: number
   viewportStableHeight: number

@@ -12,6 +12,18 @@ import { ensureSchema } from "./db/schema.js";
 import { redis, pingRedis, closeRedis } from "./db/redis.js";
 import { startShopActivityJob, stopShopActivityJob } from "./jobs/shopActivity.job.js";
 import {
+  startPanelUsageBillingJob,
+  stopPanelUsageBillingJob,
+} from "./jobs/panelUsageBilling.job.js";
+import {
+  startOutboundUsageBillingJob,
+  stopOutboundUsageBillingJob,
+} from "./jobs/outboundUsageBilling.job.js";
+import {
+  startOutboundVolumeAlertJob,
+  stopOutboundVolumeAlertJob,
+} from "./jobs/outboundVolumeAlert.job.js";
+import {
   startDepositMonitorJob,
   stopDepositMonitorJob,
 } from "./jobs/depositMonitor.job.js";
@@ -35,6 +47,9 @@ async function bootstrap() {
   await ensureSchema();
 
   startShopActivityJob();
+  startPanelUsageBillingJob();
+  startOutboundUsageBillingJob();
+  startOutboundVolumeAlertJob();
   startDepositMonitorJob();
   startWalletSweepJob();
 
@@ -45,8 +60,9 @@ async function bootstrap() {
   const shutdown = async (signal) => {
     log.warn("shutdown", signal);
     stopShopActivityJob();
-    stopDepositMonitorJob();
-    stopWalletSweepJob();
+    stopPanelUsageBillingJob();
+    stopOutboundUsageBillingJob();
+    stopOutboundVolumeAlertJob();
     stopDepositMonitorJob();
     stopWalletSweepJob();
     await new Promise((resolve) => server.close(resolve));

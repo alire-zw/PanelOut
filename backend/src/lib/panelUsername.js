@@ -2,6 +2,10 @@ const USERNAME_PATTERN = /^[a-z]+$/;
 const MIN_LENGTH = 3;
 const MAX_LENGTH = 32;
 
+export function trimPanelUsername(raw) {
+  return String(raw || "").trim();
+}
+
 export function normalizePanelUsername(raw) {
   return String(raw || "").trim().toLowerCase();
 }

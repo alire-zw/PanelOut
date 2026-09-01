@@ -1,8 +1,25 @@
 export type WalletTransactionStatus = 'success' | 'pending' | 'failed'
 
-export type WalletTransactionType = 'deposit' | 'purchase' | 'transfer' | 'refund'
+export type WalletTransactionType =
+  | 'deposit'
+  | 'purchase'
+  | 'transfer'
+  | 'refund'
+  | 'panel_usage'
+  | 'outbound_usage'
+  | 'outbound_volume_purchase'
 
-export type WalletPaymentMethod = 'wallet' | 'zibal' | 'tron' | 'card' | null
+export type WalletPaymentMethod = 'wallet' | 'zibal' | 'tron' | 'card' | 'panel_wallet' | null
+
+export type PanelWalletSource = 'main' | 'panel'
+
+export type PanelServiceType =
+  | 'panel_usage'
+  | 'panel_reseller'
+  | 'panel_trial'
+  | 'panel_unlimited'
+  | 'outbound_volume'
+  | 'outbound_usage'
 
 export type ChargePaymentMethod = 'card' | 'tron'
 
@@ -17,6 +34,7 @@ export type WalletTransferAmountState = {
 export type WalletTransaction = {
   id: string
   title: string
+  subtitle?: string | null
   date: string
   amount: number
   status: WalletTransactionStatus
@@ -40,4 +58,14 @@ export type WalletTransaction = {
   amountTrx?: string | null
   incomingTxHash?: string | null
   adminNote?: string | null
+  panelUsername?: string | null
+  panelServiceType?: PanelServiceType | null
+  trafficBytes?: string | null
+  trafficGb?: string | null
+  walletSource?: PanelWalletSource | null
+  chargeCount?: number | null
+  invoiceNumber?: number | null
+  anchorChargeId?: string | null
+  dateFrom?: string | null
+  dateTo?: string | null
 }

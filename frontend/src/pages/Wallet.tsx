@@ -66,6 +66,10 @@ function TransactionIcon({ transaction }: { transaction: WalletTransaction }) {
     return <MoneyReceive02Icon {...iconProps} />
   }
 
+  if (transaction.type === 'panel_usage') {
+    return <MoneySendFlow02Icon {...iconProps} />
+  }
+
   if (transaction.type === 'purchase') {
     return <MoneySendFlow02Icon {...iconProps} />
   }
@@ -114,7 +118,7 @@ function getTransactionIconClass(transaction: WalletTransaction): string {
       : 'wallet__transaction-icon wallet__transaction-icon--transfer-out'
   }
 
-  if (transaction.type === 'purchase' || transaction.amount < 0) {
+  if (transaction.type === 'purchase' || transaction.type === 'panel_usage' || transaction.amount < 0) {
     return 'wallet__transaction-icon wallet__transaction-icon--transfer-out'
   }
 
@@ -159,7 +163,17 @@ function TransactionRow({
         </span>
         <div className="wallet__transaction-info">
           <div className="wallet__transaction-title">{transaction.title}</div>
-          <div className="wallet__transaction-date">{transaction.date}</div>
+          <div className="wallet__transaction-date">
+            {transaction.subtitle ? (
+              <>
+                <span>{transaction.subtitle}</span>
+                <span aria-hidden> · </span>
+                <span>{transaction.date}</span>
+              </>
+            ) : (
+              transaction.date
+            )}
+          </div>
         </div>
       </div>
       <span className={`wallet__transaction-amount ${amountClass}`}>

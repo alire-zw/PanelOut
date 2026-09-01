@@ -78,4 +78,20 @@ export const config = {
     }
     return [...list].filter(Boolean);
   },
+
+  miniAppPath(path = "") {
+    const base = this.miniAppUrl.replace(/\/+$/, "");
+    if (!path) return base;
+    const normalized = path.startsWith("/") ? path : `/${path}`;
+    return `${base}${normalized}`;
+  },
+
+  /** Mini App URL with Telegram start param (path + query fallback for deep links). */
+  miniAppDeepLink(startParam, path = "") {
+    const url = new URL(this.miniAppPath(path));
+    if (startParam) {
+      url.searchParams.set("tgWebAppStartParam", startParam);
+    }
+    return url.toString();
+  },
 };

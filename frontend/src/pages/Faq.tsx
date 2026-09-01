@@ -4,8 +4,9 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { SolarIcon } from '../components/SolarIcon'
 import SearchIcon from '../components/icons/SearchIcon'
-import { FAQ_CATEGORIES } from '../data/faqContent'
+import { buildFaqCategories, type FaqCategory } from '../data/faqContent'
 import { useTelegram } from '../hooks/useTelegram'
+import { fetchShopPricing, type SubscriptionPricing } from '../lib/paymentsApi'
 import { isTelegramWebApp } from '../lib/telegram'
 import '../styles/shop-rise.css'
 import './Faq.css'
@@ -45,6 +46,23 @@ export function FaqPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [openItems, setOpenItems] = useState<Record<string, boolean>>({})
+  const [pricing, setPricing] = useState<SubscriptionPricing | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchShopPricing()
+      .then((res) => {
+        if (!cancelled && res) setPricing(res)
+      })
+      .catch(() => {
+        // use defaults
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const categories = useMemo(() => buildFaqCategories(pricing ?? undefined), [pricing])
 
   const handleBack = useCallback(() => {
     haptic('light')
@@ -84,7 +102,7 @@ export function FaqPage() {
   const filteredCategories = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
 
-    return FAQ_CATEGORIES.map((cat) => {
+    return categories.map((cat) => {
       if (selectedCategory !== 'all' && cat.id !== selectedCategory) {
         return null
       }
@@ -107,8 +125,8 @@ export function FaqPage() {
         ...cat,
         questions: matchingQuestions,
       }
-    }).filter((cat): cat is typeof FAQ_CATEGORIES[number] => cat !== null)
-  }, [searchQuery, selectedCategory])
+    }).filter((cat): cat is FaqCategory => cat !== null)
+  }, [categories, searchQuery, selectedCategory])
 
   const totalFilteredQuestions = useMemo(() => {
     return filteredCategories.reduce((acc, cat) => acc + cat.questions.length, 0)
@@ -173,7 +191,7 @@ export function FaqPage() {
           >
             همه سوالات
           </button>
-          {FAQ_CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat.id}
               type="button"

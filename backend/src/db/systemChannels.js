@@ -21,7 +21,7 @@ export const ADMIN_SYSTEM_CHANNEL_LABELS = Object.freeze({
 });
 
 export const ADMIN_SYSTEM_CHANNEL_HINTS = Object.freeze({
-  admin_report: "فقط برای ادمین‌ها؛ همیشه فعال و بدون قفل عضویت",
+  admin_report: "فقط برای ادمین‌ها؛ لینک پست عمومی یا خصوصی (t.me/c/...) قابل قبول است",
   purchase_report: "اطلاع خریدها و سفارش‌های موفق",
   notification: "اطلاع‌رسانی عمومی به کاربران",
 });
@@ -112,6 +112,13 @@ function serializeChannel(row) {
   };
 }
 
+/** Convert private link channel id (t.me/c/ID) to Bot API chat_id (-100ID). */
+export function privateChannelInternalIdToChatId(internalId) {
+  const id = String(internalId || "").replace(/\D/g, "");
+  if (!id) return null;
+  return Number(`-100${id}`);
+}
+
 export function parseTelegramPostLink(rawLink) {
   const trimmed = String(rawLink || "").trim();
   if (!trimmed) {
@@ -143,11 +150,28 @@ export function parseTelegramPostLink(rawLink) {
     .map((part) => part.trim())
     .filter(Boolean);
 
+  // Private / invite-style post: https://t.me/c/2601299495/44
   if (parts[0]?.toLowerCase() === "c") {
-    throw new AdminSystemChannelError(
-      "فقط پست کانال‌های عمومی پشتیبانی می‌شود",
-      "PRIVATE_CHANNEL",
-    );
+    const internalId = parts[1];
+    const messageId = Number.parseInt(parts[2] ?? "", 10);
+    if (!/^\d{5,20}$/.test(internalId || "")) {
+      throw new AdminSystemChannelError("لینک کانال خصوصی معتبر نیست", "INVALID_LINK");
+    }
+    if (!Number.isFinite(messageId) || messageId <= 0) {
+      throw new AdminSystemChannelError("لینک باید مربوط به یک پست باشد", "INVALID_LINK");
+    }
+    const chatId = privateChannelInternalIdToChatId(internalId);
+    if (!chatId) {
+      throw new AdminSystemChannelError("لینک کانال خصوصی معتبر نیست", "INVALID_LINK");
+    }
+    return {
+      kind: "private",
+      chatId,
+      internalId,
+      username: null,
+      messageId,
+      canonicalUrl: `https://t.me/c/${internalId}/${messageId}`,
+    };
   }
 
   const usernameIndex = parts[0]?.toLowerCase() === "s" ? 1 : 0;
@@ -164,6 +188,9 @@ export function parseTelegramPostLink(rawLink) {
   }
 
   return {
+    kind: "public",
+    chatId: null,
+    internalId: null,
     username,
     messageId,
     canonicalUrl: `https://t.me/${username}/${messageId}`,
@@ -208,16 +235,28 @@ export async function listAdminSystemChannels() {
 export async function registerAdminSystemChannel(actor, slotKeyRaw, link) {
   const slotKey = assertSlot(slotKeyRaw);
   const parsed = parseTelegramPostLink(link);
+
+  // Private channels are only for admin_report (no public join URL for lock).
+  if (parsed.kind === "private" && !isAlwaysOnSystemChannel(slotKey)) {
+    throw new AdminSystemChannelError(
+      "لینک کانال خصوصی فقط برای «کانال گزارش ادمین» مجاز است. برای قفل عضویت لینک پست عمومی وارد کنید.",
+      "PRIVATE_CHANNEL",
+    );
+  }
+
   const api = getBotApi();
   const bot = await resolveBotIdentity();
-  const chatId = `@${parsed.username}`;
+  const chatLookupId =
+    parsed.kind === "private" ? parsed.chatId : `@${parsed.username}`;
 
   let chat;
   try {
-    chat = await api.getChat(chatId);
+    chat = await api.getChat(chatLookupId);
   } catch {
     throw new AdminSystemChannelError(
-      "کانال پیدا نشد یا عمومی نیست",
+      parsed.kind === "private"
+        ? "کانال خصوصی پیدا نشد؛ ربات را ادمین کانال کنید و دوباره تلاش کنید"
+        : "کانال پیدا نشد یا عمومی نیست",
       "CHANNEL_UNAVAILABLE",
     );
   }
@@ -257,8 +296,13 @@ export async function registerAdminSystemChannel(actor, slotKeyRaw, link) {
     );
   }
 
-  const username = (chat.username ?? parsed.username).toLowerCase();
-  const title = chat.title?.trim() || username;
+  const username =
+    parsed.kind === "private"
+      ? `c/${parsed.internalId}`
+      : String(chat.username ?? parsed.username).toLowerCase();
+  const title =
+    chat.title?.trim() ||
+    (parsed.kind === "private" ? `کانال خصوصی ${parsed.internalId}` : username);
   const sql = getSql();
 
   const [row] = await sql`
@@ -276,7 +320,10 @@ export async function registerAdminSystemChannel(actor, slotKeyRaw, link) {
     RETURNING *
   `;
 
-  log.event("channels", `register ${slotKey} @${username} by:${actor.telegramId}`);
+  log.event(
+    "channels",
+    `register ${slotKey} ${parsed.kind === "private" ? username : `@${username}`} by:${actor.telegramId}`,
+  );
   return { channel: serializeChannel(row) };
 }
 
@@ -332,6 +379,18 @@ export async function deactivateAdminSystemChannelsByChatId(chatId) {
       AND is_active = TRUE
       AND slot_key <> 'admin_report'
   `;
+}
+
+export async function getActiveAdminSystemChannel(slotKeyRaw) {
+  const slotKey = assertSlot(slotKeyRaw);
+  const sql = getSql();
+  const [row] = await sql`
+    SELECT * FROM admin_system_channels
+    WHERE slot_key = ${slotKey}
+      AND (is_active = TRUE OR slot_key = 'admin_report')
+    LIMIT 1
+  `;
+  return row ? serializeChannel(row) : null;
 }
 
 async function checkUserJoinedChannel(chatId, telegramId) {

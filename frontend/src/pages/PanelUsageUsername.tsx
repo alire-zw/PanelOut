@@ -25,7 +25,10 @@ export function PanelUsageUsernamePage() {
     setBusy(true)
     setError(null)
     try {
-      const result = await activatePanelUsage(username.trim().toLowerCase())
+      const result = await activatePanelUsage({
+        username: username.trim().toLowerCase(),
+        mode: 'new',
+      })
       haptic('light')
       navigate('/panel/success', {
         state: {
@@ -58,9 +61,9 @@ export function PanelUsageUsernamePage() {
         </div>
 
         <div className="panel-flow__summary">
-          <h2 className="panel-flow__summary-title">نام کاربری ادمین پنل مصرفی</h2>
+          <h2 className="panel-flow__summary-title">نام کاربری پنل مصرفی</h2>
           <p className="panel-flow__summary-desc">
-            یک نام کاربری انگلیسی برای لاگین به پنل ادمین انتخاب کنید. رمز عبور به‌صورت تصادفی و ایمن ساخته خواهد شد.
+            نام کاربری انگلیسی پنل ادمین را انتخاب کنید. رمز عبور به‌صورت خودکار ساخته می‌شود.
           </p>
         </div>
 

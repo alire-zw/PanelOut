@@ -95,26 +95,11 @@ export function getBankVisual(slug: string | null | undefined, cardNumber?: stri
   return withIcon('unknown', { ...UNKNOWN })
 }
 
-const CARD_PATTERNS = [
-  '/pattern/Pattern1.svg',
-  '/pattern/Pattern2.svg',
-  '/pattern/Pattern3.svg',
-  '/pattern/Pattern4.svg',
-  '/pattern/Pattern5.svg',
-  '/pattern/Pattern6.svg',
-  '/pattern/Pattern7.svg',
-  '/pattern/Pattern8.svg',
-  '/pattern/Pattern9.svg',
-  '/pattern/Pattern10.svg',
-  '/pattern/Shape1.svg',
-  '/pattern/Shape2.svg',
-] as const
-
-export function getCardPattern(cardId: number): string {
-  return CARD_PATTERNS[cardId % CARD_PATTERNS.length]
-}
-
-export function getRandomCardPattern(): string {
-  const index = Math.floor(Math.random() * CARD_PATTERNS.length)
-  return CARD_PATTERNS[index] ?? CARD_PATTERNS[0]
-}
+export {
+  CARD_PATTERN_URLS,
+  getCardPattern,
+  getCardTopBackgroundStyle,
+  getRandomCardPattern,
+  preloadCardPatterns,
+  type CardPatternUrl,
+} from './cardPatterns'

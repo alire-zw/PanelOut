@@ -1,0 +1,126 @@
+.action-sheet__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: var(--overlay-backdrop, rgba(0, 0, 0, 0.4));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.42s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.action-sheet__backdrop--visible {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.action-sheet__panel {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  z-index: 9999;
+  width: 100%;
+  max-width: 700px;
+  border-radius: 20px 20px 0 0;
+  background: var(--bg);
+  transform: translateX(-50%) translateY(100%);
+  transition: transform 0.42s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.action-sheet__panel--visible {
+  transform: translateX(-50%) translateY(0);
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.action-sheet__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px var(--page-padding-x) 0;
+}
+
+.action-sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--text-muted);
+  opacity: 0.3;
+}
+
+.action-sheet__title {
+  width: 100%;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+}
+
+.action-sheet__body {
+  padding: 10px var(--page-padding-x) calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.action-sheet__desc {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.action-sheet__content {
+  margin-bottom: 12px;
+}
+
+.action-sheet__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-sheet__btn {
+  flex: 1;
+  height: 42px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.action-sheet__btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.action-sheet__btn--ghost {
+  flex: 0 0 auto;
+  min-width: 88px;
+  background: var(--surface-elevated);
+}
+
+.action-sheet__btn--primary {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border-subtle));
+  background: var(--accent);
+  color: var(--accent-contrast, #fff);
+}
+
+.action-sheet__btn--danger {
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--border-subtle));
+  background: color-mix(in srgb, var(--danger) 88%, #000);
+  color: #fff;
+}
+
+.action-sheet__btn--success {
+  border-color: color-mix(in srgb, var(--success) 40%, var(--border-subtle));
+  background: var(--success);
+  color: #fff;
+}
+
+.action-sheet__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

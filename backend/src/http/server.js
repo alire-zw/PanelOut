@@ -9,6 +9,7 @@ import {
 } from "./respond.js";
 import { tryServeUpload } from "./uploads.js";
 import { handlePanelRoutes } from "../routes/panel.js";
+import { handleOutboundRoutes } from "../routes/outbound.js";
 import { handleUserRoutes } from "../routes/user.js";
 import { handleAdminRoutes } from "../routes/admin.js";
 import { handlePaymentRoutes } from "../routes/payments.js";
@@ -96,6 +97,7 @@ export function createAppServer(bot) {
       try {
         if (await handleUserRoutes(req, res, path)) return;
         if (await handlePanelRoutes(req, res, path)) return;
+        if (await handleOutboundRoutes(req, res, path)) return;
         if (await handleAdminRoutes(req, res, path)) return;
         if (await handlePaymentRoutes(req, res, path)) return;
         if (await handleWalletRoutes(req, res, path)) return;

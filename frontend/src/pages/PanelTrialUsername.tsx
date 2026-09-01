@@ -60,7 +60,7 @@ export function PanelTrialUsernamePage() {
         <div className="panel-flow__summary">
           <h2 className="panel-flow__summary-title">نام کاربری پنل تست</h2>
           <p className="panel-flow__summary-desc">
-            یک نام کاربری انگلیسی برای ورود به پنل ادمین انتخاب کنید. رمز عبور به‌صورت خودکار و ایمن ساخته می‌شود.
+            نام کاربری انگلیسی پنل ادمین را انتخاب کنید. رمز عبور به‌صورت خودکار ساخته می‌شود.
           </p>
         </div>
 

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Notification } from '../components/Notification'
 import { PageHeader } from '../components/PageHeader'
-import DepositCryptoIcon from '../components/icons/DepositCryptoIcon'
 import { useAdminAccess } from '../hooks/useAdminAccess'
 import { useTelegram } from '../hooks/useTelegram'
 import {
@@ -12,31 +11,7 @@ import {
 } from '../lib/paymentsApi'
 import { isTelegramWebApp } from '../lib/telegram'
 import '../styles/shop-rise.css'
-import './Admin.css'
-
-function AdminPaymentSettingsSkeleton() {
-  return (
-    <>
-      {[0, 1].map((index) => (
-        <section
-          key={index}
-          className="admin-payment-settings__card admin-payment-settings__card--skeleton shop-rise"
-          style={{ '--rise-index': index + 1 } as CSSProperties}
-          aria-hidden="true"
-        >
-          <div className="admin-payment-settings__skeleton-head">
-            <span className="admin-payment-settings__skeleton-icon" />
-            <span className="admin-payment-settings__skeleton-copy">
-              <span className="admin-payment-settings__skeleton-line admin-payment-settings__skeleton-line--title" />
-              <span className="admin-payment-settings__skeleton-line admin-payment-settings__skeleton-line--hint" />
-            </span>
-          </div>
-          <span className="admin-payment-settings__skeleton-line admin-payment-settings__skeleton-line--action" />
-        </section>
-      ))}
-    </>
-  )
-}
+import './AdminPaymentSettings.css'
 
 export function AdminPaymentSettingsPage() {
   const navigate = useNavigate()
@@ -45,6 +20,7 @@ export function AdminPaymentSettingsPage() {
   const [settings, setSettings] = useState<PaymentSettings | null>(null)
   const [masterWallet, setMasterWallet] = useState('')
   const [loading, setLoading] = useState(true)
+  const [toggling, setToggling] = useState(false)
   const [saving, setSaving] = useState(false)
   const [notification, setNotification] = useState<{
     show: boolean
@@ -97,13 +73,26 @@ export function AdminPaymentSettingsPage() {
   if (!ready || !allowed) return null
 
   const toggleTron = async () => {
-    if (!settings || saving) return
+    if (!settings || toggling || saving) return
+    if (!settings.tronConfigured) {
+      haptic('light')
+      setNotification({
+        show: true,
+        message: 'کلید TRONGRID و SwapWallet در سرور تنظیم نشده',
+        type: 'error',
+      })
+      return
+    }
     haptic('light')
-    setSaving(true)
+    setToggling(true)
     try {
       const next = await updateAdminPaymentSettings({ tronEnabled: !settings.tronEnabled })
       setSettings(next)
-      setNotification({ show: true, message: 'تنظیمات ذخیره شد', type: 'success' })
+      setNotification({
+        show: true,
+        message: next.tronEnabled ? 'پرداخت ترون فعال شد' : 'پرداخت ترون غیرفعال شد',
+        type: 'success',
+      })
     } catch (err) {
       setNotification({
         show: true,
@@ -111,12 +100,12 @@ export function AdminPaymentSettingsPage() {
         type: 'error',
       })
     } finally {
-      setSaving(false)
+      setToggling(false)
     }
   }
 
   const saveMasterWallet = async () => {
-    if (saving) return
+    if (saving || toggling) return
     haptic('light')
     setSaving(true)
     try {
@@ -137,77 +126,110 @@ export function AdminPaymentSettingsPage() {
     }
   }
 
+  const tronEnabled = Boolean(settings?.tronEnabled)
+  const tronConfigured = Boolean(settings?.tronConfigured)
+
   return (
-    <div className="admin admin-page">
+    <div className="admin-tron">
       <div className="shop-rise" style={{ '--rise-index': 0 } as CSSProperties}>
-        <PageHeader title="تنظیمات پرداخت ترون" onBack={handleBack} />
+        <PageHeader title="پرداخت ترون" onBack={handleBack} />
       </div>
 
-      {loading ? (
-        <AdminPaymentSettingsSkeleton />
-      ) : (
-        <>
-          <section
-            className="admin-payment-settings__card shop-rise"
-            style={{ '--rise-index': 1 } as CSSProperties}
-          >
-            <div className="admin-payment-settings__head">
-              <span className="admin-payment-settings__icon">
-                <DepositCryptoIcon width={20} height={20} />
-              </span>
-              <div>
-                <h2 className="admin-payment-settings__title">پرداخت TRX</h2>
-                <p className="admin-payment-settings__hint">
-                  {settings?.tronConfigured
-                    ? 'سرویس ترون پیکربندی شده است'
-                    : 'کلید TRONGRID و SwapWallet در سرور تنظیم نشده'}
-                </p>
-              </div>
-            </div>
+      <div className="admin-tron__content">
+        <h2 className="admin-tron__section-title shop-rise" style={{ '--rise-index': 1 } as CSSProperties}>
+          وضعیت سرویس
+        </h2>
 
-            <button
-              type="button"
-              className={`admin-payment-settings__toggle${
-                settings?.tronEnabled ? ' admin-payment-settings__toggle--on' : ''
-              }`}
-              onClick={() => void toggleTron()}
-              disabled={saving || !settings?.tronConfigured}
-            >
-              {settings?.tronEnabled ? 'فعال' : 'غیرفعال'}
-            </button>
-          </section>
-
-          <section
-            className="admin-payment-settings__card shop-rise"
+        {loading ? (
+          <div
+            className="admin-tron__card admin-tron__card--skeleton shop-rise"
             style={{ '--rise-index': 2 } as CSSProperties}
+            aria-hidden="true"
           >
-            <label className="admin-payment-settings__label" htmlFor="master-wallet">
-              آدرس کیف پول اصلی (Sweep)
-            </label>
-            <input
-              id="master-wallet"
-              className="admin-payment-settings__input"
-              value={masterWallet}
-              onChange={(event) => setMasterWallet(event.target.value)}
-              placeholder="T..."
-              dir="ltr"
-              autoComplete="off"
-              spellCheck={false}
-            />
-            <p className="admin-payment-settings__note">
-              واریزهای TRX پس از تأیید به این آدرس منتقل می‌شوند.
-            </p>
+            <div className="admin-tron__row">
+              <div className="admin-tron__copy">
+                <span className="admin-tron__skel admin-tron__skel--title" />
+                <span className="admin-tron__skel admin-tron__skel--hint" />
+              </div>
+              <span className="admin-tron__skel admin-tron__skel--switch" />
+            </div>
+          </div>
+        ) : (
+          <div className="admin-tron__card shop-rise" style={{ '--rise-index': 2 } as CSSProperties}>
+            <div className="admin-tron__row">
+              <div className="admin-tron__copy">
+                <span className="admin-tron__label">پرداخت TRX</span>
+                <span className="admin-tron__hint">
+                  {tronConfigured
+                    ? tronEnabled
+                      ? 'در شارژ کیف پول نمایش داده می‌شود'
+                      : 'در شارژ کیف پول مخفی است'
+                    : 'کلید سرور تنظیم نشده'}
+                </span>
+              </div>
+              <button
+                type="button"
+                className={`admin-tron__switch${tronEnabled ? ' is-on' : ''}`}
+                onClick={() => void toggleTron()}
+                disabled={toggling || !tronConfigured}
+                aria-pressed={tronEnabled}
+                aria-label={tronEnabled ? 'غیرفعال کردن' : 'فعال کردن'}
+              >
+                <span className="admin-tron__switch-thumb" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <h2
+          className="admin-tron__section-title shop-rise"
+          style={{ '--rise-index': 3, marginTop: 16 } as CSSProperties}
+        >
+          کیف پول اصلی
+        </h2>
+
+        {loading ? (
+          <div
+            className="admin-tron__card admin-tron__card--skeleton shop-rise"
+            style={{ '--rise-index': 4 } as CSSProperties}
+            aria-hidden="true"
+          >
+            <div className="admin-tron__field">
+              <span className="admin-tron__skel admin-tron__skel--label" />
+              <span className="admin-tron__skel admin-tron__skel--input" />
+            </div>
+            <span className="admin-tron__skel admin-tron__skel--note" />
+            <span className="admin-tron__skel admin-tron__skel--btn" />
+          </div>
+        ) : (
+          <div className="admin-tron__card shop-rise" style={{ '--rise-index': 4 } as CSSProperties}>
+            <div className="admin-tron__field">
+              <label className="admin-tron__field-label" htmlFor="master-wallet">
+                آدرس Sweep
+              </label>
+              <input
+                id="master-wallet"
+                className="admin-tron__input"
+                value={masterWallet}
+                onChange={(event) => setMasterWallet(event.target.value)}
+                placeholder="T..."
+                dir="ltr"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+            <p className="admin-tron__note">واریزهای TRX پس از تأیید به این آدرس منتقل می‌شوند.</p>
             <button
               type="button"
-              className="admin-payment-settings__save"
+              className="admin-tron__save"
               onClick={() => void saveMasterWallet()}
               disabled={saving}
             >
-              ذخیره آدرس
+              {saving ? 'در حال ذخیره…' : 'ذخیره آدرس'}
             </button>
-          </section>
-        </>
-      )}
+          </div>
+        )}
+      </div>
 
       <Notification
         show={notification.show}

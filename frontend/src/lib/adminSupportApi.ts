@@ -93,23 +93,40 @@ export async function replyAdminTicket(
   return data
 }
 
-export async function fetchSupportContactSetting() {
-  const data = await apiFetch<{ ok: boolean; telegramUsername: string | null }>(
-    '/api/admin/settings/support-contact',
-  )
-  return data.telegramUsername
+export type SupportContactSetting = {
+  telegramUsername: string | null
+  enabled: boolean
 }
 
-export async function updateSupportContactSetting(telegramUsername: string) {
-  const data = await apiFetch<{ ok: boolean; telegramUsername: string | null }>(
-    '/api/admin/settings/support-contact',
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ telegramUsername }),
-    },
-  )
-  return data.telegramUsername
+export async function fetchSupportContactSetting(): Promise<SupportContactSetting> {
+  const data = await apiFetch<{
+    ok: boolean
+    telegramUsername: string | null
+    enabled?: boolean
+  }>('/api/admin/settings/support-contact')
+  return {
+    telegramUsername: data.telegramUsername,
+    enabled: Boolean(data.enabled && data.telegramUsername),
+  }
+}
+
+export async function updateSupportContactSetting(payload: {
+  telegramUsername?: string
+  enabled?: boolean
+}): Promise<SupportContactSetting> {
+  const data = await apiFetch<{
+    ok: boolean
+    telegramUsername: string | null
+    enabled?: boolean
+  }>('/api/admin/settings/support-contact', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return {
+    telegramUsername: data.telegramUsername,
+    enabled: Boolean(data.enabled && data.telegramUsername),
+  }
 }
 
 export type { SupportCategory }
