@@ -46,17 +46,33 @@ function formatBytes(bytes) {
   return `${(value / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-function buildBackupCaption({ database, reason, compressedBytes, uncompressedBytes }) {
+function buildBackupCaption({
+  database,
+  reason,
+  compressedBytes,
+  uncompressedBytes,
+  stats,
+}) {
   const reasonLabel = REASON_LABELS[reason] || reason;
-  return [
+  const lines = [
     `🗄 ${boldLabel("Database Backup")}`,
     "",
     `⏳ ${boldLabel("Time:")} ${escapeHtml(formatTehranTime())}`,
     `🗃 ${boldLabel("Database:")} <code>${escapeHtml(database)}</code>`,
     `📦 ${boldLabel("Compressed:")} ${escapeHtml(formatBytes(compressedBytes))}`,
     `📄 ${boldLabel("Raw SQL:")} ${escapeHtml(formatBytes(uncompressedBytes))}`,
-    `📌 ${boldLabel("Trigger:")} ${escapeHtml(reasonLabel)}`,
-  ].join("\n");
+  ];
+
+  if (stats?.tables || stats?.rows) {
+    lines.push(
+      `📊 ${boldLabel("Contents:")} ${escapeHtml(
+        `${stats.tables} tables · ${stats.rows} rows · ${stats.sequences} sequences · ${stats.constraints} constraints · ${stats.indexes} indexes`,
+      )}`,
+    );
+  }
+
+  lines.push(`📌 ${boldLabel("Trigger:")} ${escapeHtml(reasonLabel)}`);
+  return lines.join("\n");
 }
 
 async function notifyBackupFailure(chatId, message) {
@@ -88,6 +104,7 @@ export async function sendDatabaseBackupToAdminReport({ reason = "scheduled" } =
       reason,
       compressedBytes: backup.compressedBytes,
       uncompressedBytes: backup.uncompressedBytes,
+      stats: backup.stats,
     });
 
     await getBotApi().sendDocument(chatId, new InputFile(backup.buffer, backup.filename), {

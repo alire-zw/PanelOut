@@ -122,6 +122,13 @@ export async function createDatabaseBackupGzip() {
 
   const timestamp = formatTimestampForFilename(new Date());
   const filename = `panelout-${database}-${timestamp}.sql.gz`;
+  const sqlText = sqlBuffer.toString("utf8");
+  const summaryLine = sqlText.match(/-- Summary:\s*(.+)/)?.[1]?.trim() || "";
+  const tables = Number(summaryLine.match(/tables=(\d+)/)?.[1] || 0);
+  const rows = Number(summaryLine.match(/rows=(\d+)/)?.[1] || 0);
+  const sequences = Number(summaryLine.match(/sequences=(\d+)/)?.[1] || 0);
+  const constraints = Number(summaryLine.match(/constraints=(\d+)/)?.[1] || 0);
+  const indexes = Number(summaryLine.match(/indexes=(\d+)/)?.[1] || 0);
 
   return {
     buffer: gzipBuffer,
@@ -129,5 +136,6 @@ export async function createDatabaseBackupGzip() {
     database,
     uncompressedBytes: sqlBuffer.length,
     compressedBytes: gzipBuffer.length,
+    stats: { tables, rows, sequences, constraints, indexes, summaryLine },
   };
 }
